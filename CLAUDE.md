@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Identifiers: npm package and crate `server-ports` (lib `server_ports_lib`), bundle id `com.chensy.server-ports`.
 
-Status (2026-10-26): early development. The Rust core (model, stores, secrets, prompts, the `ssh/` engine and the `Backend` facade), the Tauri layer (commands, tray, close-to-tray, autostart, single instance) and the React UI (nine languages, light and dark) all exist and run on Linux. `cargo test` passes against an in-process SSH server, the UI was checked in a browser against the mock backend, and the real app starts, shows its tray icon and loads the UI. Never built on macOS or Windows (the Windows branch of `connect_agent` is not compiled anywhere yet), and nothing is released. GitHub Actions workflows for CI and for building the installers exist but have not run yet. Known gaps: no keyboard-interactive (2FA) login, ProxyJump, host certificates, `-R` / `-D` forwards or `~/.ssh/config` import. Update this line as that changes.
+Status (2026-10-26): early development. The Rust core (model, stores, secrets, prompts, the `ssh/` engine and the `Backend` facade), the Tauri layer (commands, tray, close-to-tray, autostart, single instance) and the React UI (nine languages, light and dark) all exist and run on Linux. `cargo test` passes against an in-process SSH server, the UI was checked in a browser against the mock backend, and the real app starts, shows its tray icon and loads the UI. CI (`ci.yml`) lints and tests the core on Linux, macOS and Windows, and a manual run of `release.yml` on `main` built every installer; both were green. The `.deb` from that run has been installed and started on Ubuntu 26.04 (GNOME, Wayland). The app itself has never been run on macOS or Windows, their installers have never been installed, and nothing is released. Known gaps: no keyboard-interactive (2FA) login, ProxyJump, host certificates, `-R` / `-D` forwards or `~/.ssh/config` import. Update this line as that changes.
 
 ## Commands
 
@@ -76,7 +76,7 @@ Keep this list in sync when you add or move modules.
 - `ci.yml` runs on pull requests and on `main`: the frontend (`npm ci`, typecheck, build) and the Rust side on Linux, macOS and Windows (`cargo fmt --check` on Linux only, `cargo clippy --all-targets -- -D warnings`, `cargo test`). It is the only place the macOS and Windows code is compiled.
 - `release.yml` runs on a tag `v*`. By hand it only builds and keeps the installers as workflow artifacts. `tauri-apps/tauri-action` builds `.deb` / `.rpm` / `.AppImage` (ubuntu-22.04), `.dmg` for aarch64 and x86_64, and `.exe` / `.msi`, and attaches them to a draft release. It first checks that the tag equals the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, so bump all three together.
 - The builds are unsigned: macOS is signed ad hoc (`APPLE_SIGNING_IDENTITY: "-"` in the workflow), Windows is not signed. Signing and notarization need certificates; they go into GitHub secrets (see Tauri's signing guides), never into the repo.
-- Written against the action versions current on 2026-10-26 (`checkout@v7`, `setup-node@v7`, `tauri-action@v1`); the workflows have not run yet, so expect the first run on macOS and Windows to turn up platform problems.
+- Written against the action versions current on 2026-10-26 (`checkout@v7`, `setup-node@v7`, `tauri-action@v1`); both workflows have run green since.
 
 ## Documentation
 

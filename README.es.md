@@ -8,7 +8,7 @@
 
 </div>
 
-> **Estado: desarrollo inicial.** Todavía no hay ninguna versión publicada. El motor de túneles y la interfaz ya existen, y la integración continua (CI) compila instaladores para los tres sistemas, pero la aplicación solo se ha ejecutado en Linux; macOS y Windows no se han probado.
+> **Estado: desarrollo inicial.** Todavía no hay ninguna versión publicada. El motor de túneles y la interfaz ya existen, y la integración continua (CI) compila, prueba y empaqueta la aplicación en Linux, macOS y Windows, pero solo se ha ejecutado en Linux; los instaladores de macOS y Windows no se han probado.
 
 Server Ports es una pequeña aplicación de escritorio multiplataforma (Windows, macOS y Linux) que mantiene activas tus redirecciones de puertos SSH. Elige un servidor, indica los puertos que necesitas y aparecerán en `localhost`. Es lo mismo que `ssh -L`, sin tener que andar con la terminal.
 

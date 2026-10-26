@@ -8,7 +8,7 @@ English | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [�
 
 </div>
 
-> **Status: early development.** There is no release yet. The tunnel engine and the interface are in place, and CI builds installers for all three systems, but the app has only been run on Linux so far; macOS and Windows are untested.
+> **Status: early development.** There is no release yet. The tunnel engine and the interface are in place, and CI builds, tests and packages the app on Linux, macOS and Windows, but it has only been run on Linux so far: the macOS and Windows installers are untested.
 
 Server Ports is a small cross-platform desktop app (Windows, macOS, Linux) that keeps your SSH port forwards running. Pick a server, list the ports you need, and they appear on `localhost`. It is the same thing as `ssh -L`, minus the terminal juggling.
 
