@@ -8,7 +8,7 @@ English | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [�
 
 </div>
 
-> **Status: early development.** There is no release yet. The tunnel engine and the interface are in place, but the app has only been built and run on Linux so far; macOS and Windows are untested.
+> **Status: early development.** There is no release yet. The tunnel engine and the interface are in place, and CI builds installers for all three systems, but the app has only been run on Linux so far; macOS and Windows are untested.
 
 Server Ports is a small cross-platform desktop app (Windows, macOS, Linux) that keeps your SSH port forwards running. Pick a server, list the ports you need, and they appear on `localhost`. It is the same thing as `ssh -L`, minus the terminal juggling.
 
@@ -22,7 +22,7 @@ Server Ports is a small cross-platform desktop app (Windows, macOS, Linux) that 
 - **Auto-reconnect**: dropped connections are retried with a growing delay (from 1 s up to 30 s), and a profile can connect as soon as the app starts.
 - **Live status**: connection state per server, listening state per mapping, open connections, traffic counters and a small throughput graph.
 - **Lives in the tray**: closing the window hides the app in the system tray instead of quitting (this can be turned off), and the tray menu switches each server on or off. The app can also start when you sign in.
-- **Light and dark theme**, with an interface in English or Simplified Chinese.
+- **Light and dark theme**, with an interface in nine languages: English, Simplified and Traditional Chinese, Japanese, Korean, Spanish, French, German and Russian. It follows the system language until you pick one.
 - **Small footprint**: built with Tauri 2, a Rust core and the system web view, with no bundled browser.
 
 ## How it works
@@ -66,9 +66,28 @@ npm run typecheck    # type-check the frontend
 cargo test --manifest-path src-tauri/Cargo.toml  # run the Rust tests
 ```
 
+## Installers and releases
+
+GitHub Actions does the packaging, so no machine of yours has to build for macOS or Windows.
+
+- **CI** (`.github/workflows/ci.yml`) runs on every pull request and on `main`: it type-checks and builds the interface, and runs rustfmt, clippy and the Rust tests on Linux, macOS and Windows.
+- **Release** (`.github/workflows/release.yml`) builds the installers: `.deb`, `.rpm` and `.AppImage` for Linux, `.dmg` for macOS (Apple silicon and Intel), `.exe` and `.msi` for Windows.
+
+To release a version, set the same version number in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, commit, then tag and push:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+The workflow refuses a tag that does not match those three versions. It attaches the installers to a draft release, which you review and publish on GitHub. Running **Release** by hand (Actions tab, Release, Run workflow) builds the same installers as downloadable workflow artifacts without releasing anything.
+
+The installers are not code-signed yet. macOS builds are signed ad hoc, so the first launch needs a right-click and Open (or an allowance in System Settings, Privacy & Security), and Windows SmartScreen shows a warning (More info, Run anyway). Real signing and notarization need certificates, which belong in GitHub secrets and never in the repository; see Tauri's guides for [macOS](https://v2.tauri.app/distribute/sign/macos/) and [Windows](https://v2.tauri.app/distribute/sign/windows/).
+
 ## Project layout
 
 ```text
 src/         React + TypeScript user interface
 src-tauri/   Rust core: SSH port forwarding, profile storage, OS credential store, tray
+.github/     CI and release workflows
 ```

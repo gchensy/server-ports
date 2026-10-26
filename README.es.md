@@ -8,7 +8,7 @@
 
 </div>
 
-> **Estado: desarrollo inicial.** Todavía no hay ninguna versión publicada. El motor de túneles y la interfaz ya existen, pero la aplicación solo se ha compilado y ejecutado en Linux; macOS y Windows no se han probado.
+> **Estado: desarrollo inicial.** Todavía no hay ninguna versión publicada. El motor de túneles y la interfaz ya existen, y la integración continua (CI) compila instaladores para los tres sistemas, pero la aplicación solo se ha ejecutado en Linux; macOS y Windows no se han probado.
 
 Server Ports es una pequeña aplicación de escritorio multiplataforma (Windows, macOS y Linux) que mantiene activas tus redirecciones de puertos SSH. Elige un servidor, indica los puertos que necesitas y aparecerán en `localhost`. Es lo mismo que `ssh -L`, sin tener que andar con la terminal.
 
@@ -22,7 +22,7 @@ Server Ports es una pequeña aplicación de escritorio multiplataforma (Windows,
 - **Reconexión automática**: las conexiones caídas se reintentan solas, con una espera cada vez mayor (de 1 s hasta 30 s), y un perfil puede conectarse en cuanto arranca la aplicación.
 - **Estado en tiempo real**: estado de la conexión de cada servidor, estado de escucha de cada asignación, conexiones abiertas, contadores de tráfico y un pequeño gráfico de rendimiento.
 - **Vive en la bandeja del sistema**: al cerrar la ventana, la aplicación se oculta en la bandeja del sistema en lugar de salir (se puede desactivar), y el menú de la bandeja activa o desactiva cada servidor. La aplicación también puede iniciarse al iniciar sesión.
-- **Tema claro y oscuro**, con la interfaz en inglés o en chino simplificado.
+- **Tema claro y oscuro**, con la interfaz en nueve idiomas: inglés, chino simplificado y tradicional, japonés, coreano, español, francés, alemán y ruso. Sigue el idioma del sistema hasta que elijas uno.
 - **Ligera**: creada con Tauri 2, con un núcleo en Rust y la vista web del sistema, sin navegador incluido.
 
 ## Cómo funciona
@@ -66,9 +66,28 @@ npm run typecheck    # comprueba los tipos del frontend
 cargo test --manifest-path src-tauri/Cargo.toml  # ejecuta las pruebas de Rust
 ```
 
+## Instaladores y versiones
+
+Del empaquetado se encarga GitHub Actions, así que no necesitas ningún equipo con macOS o Windows.
+
+- **CI** (`.github/workflows/ci.yml`) se ejecuta en cada pull request y en `main`: comprueba los tipos y compila la interfaz, y ejecuta rustfmt, clippy y las pruebas de Rust en Linux, macOS y Windows.
+- **Release** (`.github/workflows/release.yml`) compila los instaladores: `.deb`, `.rpm` y `.AppImage` para Linux, `.dmg` para macOS (Apple silicon e Intel), `.exe` y `.msi` para Windows.
+
+Para publicar una versión, pon el mismo número de versión en `package.json`, `src-tauri/tauri.conf.json` y `src-tauri/Cargo.toml`, haz commit, crea la etiqueta y súbela:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+El flujo de trabajo rechaza una etiqueta que no coincida con esas tres versiones. Después adjunta los instaladores a un borrador de versión, que revisas y publicas en GitHub. Si ejecutas **Release** a mano (pestaña Actions, Release, Run workflow), compila los mismos instaladores como artefactos descargables del flujo de trabajo, sin publicar nada.
+
+Los instaladores todavía no están firmados. Las compilaciones de macOS llevan una firma ad hoc, así que la primera vez hay que hacer clic derecho y elegir Abrir (o permitirlo en Ajustes del Sistema, Privacidad y seguridad), y Windows SmartScreen muestra un aviso (Más información, Ejecutar de todas formas). La firma y la notarización reales necesitan certificados, que deben guardarse en los secretos de GitHub y nunca en el repositorio; consulta las guías de Tauri para [macOS](https://v2.tauri.app/distribute/sign/macos/) y [Windows](https://v2.tauri.app/distribute/sign/windows/).
+
 ## Estructura del proyecto
 
 ```text
 src/         Interfaz de usuario en React + TypeScript
 src-tauri/   Núcleo en Rust: redirección de puertos SSH, almacenamiento de perfiles, almacén de credenciales del sistema, bandeja
+.github/     Flujos de trabajo de CI y de publicación
 ```

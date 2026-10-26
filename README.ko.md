@@ -8,7 +8,7 @@
 
 </div>
 
-> **상태: 초기 개발 중.** 아직 정식 릴리스는 없습니다. 터널 엔진과 인터페이스는 갖춰졌지만, 지금까지 Linux에서만 빌드하고 실행해 보았으며 macOS와 Windows는 검증하지 않았습니다.
+> **상태: 초기 개발 중.** 아직 정식 릴리스는 없습니다. 터널 엔진과 인터페이스는 갖춰졌고, CI가 세 운영체제용 설치 파일을 빌드하지만, 지금까지 Linux에서만 실행해 보았으며 macOS와 Windows는 검증하지 않았습니다.
 
 Server Ports는 SSH 포트 포워딩을 계속 유지해 주는 작은 크로스플랫폼 데스크톱 앱(Windows, macOS, Linux)입니다. 서버를 고르고 필요한 포트를 나열하면 `localhost`에 바로 나타납니다. `ssh -L`과 같은 일을, 터미널을 열고 명령어를 입력하는 번거로움 없이 할 수 있습니다.
 
@@ -22,7 +22,7 @@ Server Ports는 SSH 포트 포워딩을 계속 유지해 주는 작은 크로스
 - **자동 재연결**: 끊어진 연결은 간격을 점점 늘려 가며(1초에서 최대 30초) 자동으로 다시 시도하며, 앱이 시작될 때 바로 연결되도록 프로필을 설정할 수도 있습니다.
 - **실시간 상태**: 서버별 연결 상태, 매핑별 수신 대기 상태, 열려 있는 연결 수, 트래픽 집계, 그리고 작은 처리량 그래프.
 - **트레이에 상주**: 창을 닫아도 앱이 종료되지 않고 시스템 트레이로 숨습니다(끌 수 있습니다). 트레이 메뉴에서 서버별로 켜고 끌 수 있으며, 로그인할 때 앱이 자동으로 시작되게 할 수도 있습니다.
-- **라이트·다크 테마**, 인터페이스 언어는 영어와 중국어 간체입니다.
+- **라이트·다크 테마**, 인터페이스 언어는 영어, 중국어 간체·번체, 일본어, 한국어, 스페인어, 프랑스어, 독일어, 러시아어의 9가지이며, 직접 고르기 전에는 시스템 언어를 따릅니다.
 - **가벼움**: Tauri 2 기반으로, Rust 코어와 OS 기본 웹뷰를 사용하며 브라우저를 내장하지 않습니다.
 
 ## 동작 방식
@@ -66,9 +66,28 @@ npm run typecheck    # 프런트엔드 타입 검사
 cargo test --manifest-path src-tauri/Cargo.toml  # Rust 테스트 실행
 ```
 
+## 설치 파일과 릴리스
+
+패키징은 GitHub Actions가 맡으므로 macOS나 Windows 컴퓨터를 따로 준비할 필요가 없습니다.
+
+- **CI**(`.github/workflows/ci.yml`)는 모든 풀 리퀘스트와 `main`에서 실행됩니다. 인터페이스의 타입 검사와 빌드, 그리고 Linux·macOS·Windows에서 rustfmt, clippy, Rust 테스트를 수행합니다.
+- **Release**(`.github/workflows/release.yml`)가 설치 파일을 빌드합니다. Linux용은 `.deb`, `.rpm`, `.AppImage`, macOS용은 `.dmg`(Apple 실리콘과 Intel), Windows용은 `.exe`와 `.msi`입니다.
+
+새 버전을 릴리스하려면 `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`의 버전을 같은 값으로 맞춰 커밋한 뒤 태그를 만들어 푸시합니다.
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+태그가 이 세 파일의 버전과 다르면 워크플로가 중단됩니다. 성공하면 설치 파일이 초안 릴리스에 첨부되며, GitHub에서 확인한 뒤 공개하면 됩니다. **Release**를 직접 실행하면(Actions 탭, Release, Run workflow) 같은 설치 파일이 워크플로 아티팩트로 내려받을 수 있게 만들어질 뿐, 아무것도 릴리스되지 않습니다.
+
+설치 파일에는 아직 코드 서명이 없습니다. macOS 빌드는 애드혹 서명이라 처음 실행할 때 우클릭 후 ‘열기’를 선택하거나(또는 시스템 설정의 ‘개인정보 보호 및 보안’에서 허용) 해야 하고, Windows에서는 SmartScreen 경고가 나타납니다(‘추가 정보’, ‘실행’). 정식 서명과 공증에는 인증서가 필요하며, 인증서는 GitHub Secrets에 두고 저장소에는 절대 넣지 마세요. Tauri의 [macOS](https://v2.tauri.app/distribute/sign/macos/), [Windows](https://v2.tauri.app/distribute/sign/windows/) 서명 가이드를 참고하세요.
+
 ## 프로젝트 구조
 
 ```text
 src/         React + TypeScript 사용자 인터페이스
 src-tauri/   Rust 코어: SSH 포트 포워딩, 프로필 저장, OS 자격 증명 저장소, 트레이
+.github/     CI 및 릴리스 워크플로
 ```

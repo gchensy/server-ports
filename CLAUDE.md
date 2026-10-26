@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Identifiers: npm package and crate `server-ports` (lib `server_ports_lib`), bundle id `com.chensy.server-ports`.
 
-Status (2026-10-26): early development. The Rust core (model, stores, secrets, prompts, the `ssh/` engine and the `Backend` facade), the Tauri layer (commands, tray, close-to-tray, autostart, single instance) and the React UI (English and 简体中文, light and dark) all exist and run on Linux. `cargo test` passes against an in-process SSH server, the UI was checked in a browser against the mock backend, and the real app starts, shows its tray icon and loads the UI. Never built on macOS or Windows (the Windows branch of `connect_agent` is not compiled anywhere yet), and nothing is released. Known gaps: no keyboard-interactive (2FA) login, ProxyJump, host certificates, `-R` / `-D` forwards or `~/.ssh/config` import. Update this line as that changes.
+Status (2026-10-26): early development. The Rust core (model, stores, secrets, prompts, the `ssh/` engine and the `Backend` facade), the Tauri layer (commands, tray, close-to-tray, autostart, single instance) and the React UI (nine languages, light and dark) all exist and run on Linux. `cargo test` passes against an in-process SSH server, the UI was checked in a browser against the mock backend, and the real app starts, shows its tray icon and loads the UI. Never built on macOS or Windows (the Windows branch of `connect_agent` is not compiled anywhere yet), and nothing is released. GitHub Actions workflows for CI and for building the installers exist but have not run yet. Known gaps: no keyboard-interactive (2FA) login, ProxyJump, host certificates, `-R` / `-D` forwards or `~/.ssh/config` import. Update this line as that changes.
 
 ## Commands
 
@@ -35,7 +35,7 @@ Run from the repo root.
 - `src/`: React UI. TypeScript is strict, and `noUnusedLocals` / `noUnusedParameters` are on. Services are classes (object-oriented on purpose), read from components through hooks.
   - `api/`: the `Backend` interface, `TauriBackend` (IPC), `MockBackend` (browser development only, tree-shaken from production), the wire types in `types.ts` (keep them in step with `model.rs` and `backend.rs`) and `errors.ts`.
   - `state/`: `AppStore` (all UI state, read through `useSyncExternalStore`; merges the startup snapshot and the event stream by `rev` and `seq`), `ThroughputTracker`, `Appearance` (light, dark, system), `prefs.ts` (localStorage), `services.tsx` (context and hooks).
-  - `i18n/`: the `I18n` class and typed catalogs. `en.ts` is the source; `zh-CN.ts` has to define the same keys.
+  - `i18n/`: the `I18n` class and one typed catalogue per language (`en`, `zh-CN`, `zh-TW`, `ja`, `ko`, `es`, `fr`, `de`, `ru`). `en.ts` is the source; the others are typed `Catalog` and have to define the same keys (the compiler checks). To add a language: a catalogue file, then `LANGUAGE_NAMES` and `catalogs` in `index.ts`, a font line in `tokens.css` if it is a CJK language, and the READMEs.
   - `components/`, `styles/` (plain CSS on the variables in `tokens.css`, no CSS framework).
 - `src-tauri/`: Rust crate and Tauri config. `tauri.conf.json` holds the window, CSP and bundle settings. `capabilities/default.json` lists what the webview may call, so add the permission there when you add a plugin that needs one (the app's own commands are allowed by default). `icons/icon.svg` is the source of the icon set.
 - `src-tauri/src/`: the core knows nothing about Tauri or the UI; it reports through an event sink.
@@ -50,6 +50,7 @@ Run from the repo root.
   - `app.rs` (plugins, setup, window and exit events, the sink that forwards events to the webview), `commands.rs` (thin Tauri commands) and `tray.rs` (tray icon and menu) are the only files that know Tauri.
   - `testing.rs` (tests only): an in-process russh server, an echo target and helpers shared by the tests.
   - `util.rs`: `now_ms`, `new_id`, `expand_tilde`, `write_atomic`.
+- `.github/workflows/`: `ci.yml` and `release.yml`, see "CI and releases".
 
 Keep this list in sync when you add or move modules.
 
@@ -67,7 +68,15 @@ Keep this list in sync when you add or move modules.
 - **The Vite dev server is pinned to port 1420** (`strictPort`) and ignores `src-tauri/` in its watcher.
 - **The window is created hidden** and shown when the UI calls `ui_ready` (or after 5 s). A hidden page paints no frames, so the UI must not wait for `requestAnimationFrame` before calling it. Starting with `--hidden` (the autostart entry) keeps it hidden.
 - **Tauri's npm packages and Rust crates must share their major.minor version** (`tauri dev` complains otherwise); the `@tauri-apps/*` packages are pinned with `~` for that reason.
+- **Languages:** the tray labels go to Rust in the current language, and the tooltip is a template whose `{n}` Rust fills in, so its wording has to work for any number (no plural forms there). Plurals elsewhere come from `Intl.PluralRules` (`ports.one` / `.other`, plus `.few` / `.many` where a language needs them); `duration.*` hold the whole text with `{n}`, so a language can add its own space or unit. Each CJK language lists its own fonts in `tokens.css` (`:root:lang(...)`), because the same Han characters are drawn differently per language.
 - **UI details that are deliberate:** addresses are shown as `127.0.0.1:port` rather than `localhost` (which may resolve to `::1` first); CSS avoids `light-dark()`, `color-mix()` and transitions of the `d` attribute because the oldest supported WebKitGTK and WKWebView lack them; the dark colour tokens appear twice in `tokens.css` (media query and explicit theme), keep them equal.
+
+## CI and releases
+
+- `ci.yml` runs on pull requests and on `main`: the frontend (`npm ci`, typecheck, build) and the Rust side on Linux, macOS and Windows (`cargo fmt --check` on Linux only, `cargo clippy --all-targets -- -D warnings`, `cargo test`). It is the only place the macOS and Windows code is compiled.
+- `release.yml` runs on a tag `v*`. By hand it only builds and keeps the installers as workflow artifacts. `tauri-apps/tauri-action` builds `.deb` / `.rpm` / `.AppImage` (ubuntu-22.04), `.dmg` for aarch64 and x86_64, and `.exe` / `.msi`, and attaches them to a draft release. It first checks that the tag equals the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, so bump all three together.
+- The builds are unsigned: macOS is signed ad hoc (`APPLE_SIGNING_IDENTITY: "-"` in the workflow), Windows is not signed. Signing and notarization need certificates; they go into GitHub secrets (see Tauri's signing guides), never into the repo.
+- Written against the action versions current on 2026-10-26 (`checkout@v7`, `setup-node@v7`, `tauri-action@v1`); the workflows have not run yet, so expect the first run on macOS and Windows to turn up platform problems.
 
 ## Documentation
 

@@ -8,7 +8,7 @@
 
 </div>
 
-> **狀態：早期開發中。** 目前尚無正式發行的版本。通道引擎與介面都已就緒，但應用程式目前只在 Linux 上建置並執行過，macOS 與 Windows 尚未測試。
+> **狀態：早期開發中。** 目前尚無正式發行的版本。通道引擎與介面都已就緒，CI 會為三個系統建置安裝程式，但應用程式目前只在 Linux 上執行過，macOS 與 Windows 尚未測試。
 
 Server Ports 是一款小巧的跨平台桌面應用程式（Windows、macOS、Linux），幫你持續維持 SSH 連接埠轉送。選一台伺服器，列出需要的連接埠，它們就會出現在 `localhost` 上。效果等同於 `ssh -L`，但不必再反覆開啟終端機、輸入指令。
 
@@ -22,7 +22,7 @@ Server Ports 是一款小巧的跨平台桌面應用程式（Windows、macOS、L
 - **自動重新連線**：連線中斷後會自動重試，間隔逐漸拉長（從 1 秒到 30 秒）；也可以讓某份設定檔在應用程式啟動時立即連線。
 - **即時狀態**：每台伺服器的連線狀態、每個對應的監聽狀態、目前連線數、流量統計，以及一張小小的速率圖。
 - **常駐系統匣**：關閉視窗時，應用程式會縮到系統匣而不是結束（可關閉此行為），系統匣選單可逐台開關伺服器；也可以設定為登入系統時自動啟動。
-- **淺色與深色主題**，介面提供英文與簡體中文。
+- **淺色與深色主題**，介面提供九種語言：英文、簡體中文、繁體中文、日文、韓文、西班牙文、法文、德文與俄文，預設跟隨系統語言，也可以手動選擇。
 - **體積小**：以 Tauri 2 打造，Rust 核心搭配系統內建的 WebView，不內附瀏覽器。
 
 ## 運作原理
@@ -66,9 +66,28 @@ npm run typecheck    # 前端型別檢查
 cargo test --manifest-path src-tauri/Cargo.toml  # 執行 Rust 測試
 ```
 
+## 安裝程式與發行
+
+打包由 GitHub Actions 負責，不需要自己準備 macOS 或 Windows 的機器。
+
+- **CI**（`.github/workflows/ci.yml`）會在每個 Pull Request 與 `main` 上執行：對介面做型別檢查與建置，並在 Linux、macOS、Windows 上執行 rustfmt、clippy 與 Rust 測試。
+- **Release**（`.github/workflows/release.yml`）負責建置安裝程式：Linux 的 `.deb`、`.rpm` 與 `.AppImage`，macOS 的 `.dmg`（Apple 晶片與 Intel），Windows 的 `.exe` 與 `.msi`。
+
+發行新版本時，先把 `package.json`、`src-tauri/tauri.conf.json` 與 `src-tauri/Cargo.toml` 裡的版本號改成同一個並提交，然後建立標籤並推送：
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+標籤與這三處版本號不一致時，工作流程會拒絕建置。建置完成後，安裝程式會附加到一個草稿 Release，在 GitHub 上確認無誤再發布。也可以手動執行 **Release**（Actions 分頁，Release，Run workflow），它會建置相同的安裝程式並作為工作流程產出物供下載，不會發布任何東西。
+
+安裝程式目前沒有程式碼簽章。macOS 版本是臨時（ad hoc）簽章，第一次開啟需要按右鍵選擇「打開」（或在「系統設定」的「隱私權與安全性」中允許），Windows 的 SmartScreen 會顯示警告（「其他資訊」，「仍要執行」）。正式的簽章與公證需要憑證，憑證應放在 GitHub Secrets 中，絕不能放進儲存庫，請參考 Tauri 的 [macOS](https://v2.tauri.app/distribute/sign/macos/) 與 [Windows](https://v2.tauri.app/distribute/sign/windows/) 簽章指南。
+
 ## 專案結構
 
 ```text
 src/         React + TypeScript 使用者介面
 src-tauri/   Rust 核心：SSH 連接埠轉送、設定檔儲存、系統認證儲存區、系統匣
+.github/     CI 與發行工作流程
 ```
