@@ -8,7 +8,7 @@
 
 </div>
 
-> **Estado: desarrollo inicial.** Todavía no hay ninguna versión publicada. Este README describe lo que la aplicación está diseñada para hacer; una parte aún se está construyendo.
+> **Estado: desarrollo inicial.** Todavía no hay ninguna versión publicada. El motor de túneles y la interfaz ya existen, pero la aplicación solo se ha compilado y ejecutado en Linux; macOS y Windows no se han probado.
 
 Server Ports es una pequeña aplicación de escritorio multiplataforma (Windows, macOS y Linux) que mantiene activas tus redirecciones de puertos SSH. Elige un servidor, indica los puertos que necesitas y aparecerán en `localhost`. Es lo mismo que `ssh -L`, sin tener que andar con la terminal.
 
@@ -16,12 +16,13 @@ Server Ports es una pequeña aplicación de escritorio multiplataforma (Windows,
 
 - **Perfiles de servidor**: un perfil por cada servidor SSH, con tantas asignaciones de puertos como necesites.
 - **Tres formas de iniciar sesión**: contraseña, archivo de clave privada (con frase de contraseña opcional) o ssh-agent (agente de OpenSSH o Pageant).
-- **Los secretos se quedan en el almacén de credenciales del sistema**: las contraseñas y las frases de contraseña de las claves se guardan en el Llavero de macOS, el Administrador de credenciales de Windows o el Secret Service de Linux, nunca en el archivo de configuración.
+- **Los secretos no van al archivo de configuración**: si lo pides, las contraseñas y las frases de contraseña de las claves se guardan en el Llavero de macOS, el Administrador de credenciales de Windows o el Secret Service de Linux; si no, solo se conservan en memoria mientras el servidor está conectado.
 - **Verificación de la clave del host**: la clave de un servidor que no habías visto antes se muestra con su huella digital y solo se acepta si tú lo confirmas; si una clave cambia, se avisa.
 - **Privado por defecto**: las redirecciones escuchan en `127.0.0.1`, de modo que solo tu propio equipo puede acceder a ellas.
-- **Reconexión automática**: las conexiones caídas se reintentan solas, y un perfil puede conectarse en cuanto arranca la aplicación.
-- **Estado en tiempo real**: estado de la conexión de cada servidor, estado de escucha de cada asignación, conexiones abiertas y contadores de tráfico.
-- **Vive en la bandeja del sistema**: al cerrar la ventana, la aplicación se oculta en la bandeja del sistema en lugar de salir (se puede desactivar).
+- **Reconexión automática**: las conexiones caídas se reintentan solas, con una espera cada vez mayor (de 1 s hasta 30 s), y un perfil puede conectarse en cuanto arranca la aplicación.
+- **Estado en tiempo real**: estado de la conexión de cada servidor, estado de escucha de cada asignación, conexiones abiertas, contadores de tráfico y un pequeño gráfico de rendimiento.
+- **Vive en la bandeja del sistema**: al cerrar la ventana, la aplicación se oculta en la bandeja del sistema en lugar de salir (se puede desactivar), y el menú de la bandeja activa o desactiva cada servidor. La aplicación también puede iniciarse al iniciar sesión.
+- **Tema claro y oscuro**, con la interfaz en inglés o en chino simplificado.
 - **Ligera**: creada con Tauri 2, con un núcleo en Rust y la vista web del sistema, sin navegador incluido.
 
 ## Cómo funciona
@@ -33,6 +34,13 @@ Cada asignación redirige un puerto de tu equipo a una dirección a la que el se
 ```
 
 Equivale a `ssh -L 127.0.0.1:8080:127.0.0.1:80 user@server`. El destino se resuelve en el servidor, así que `127.0.0.1` es el propio servidor, y también sirve cualquier otro host al que el servidor pueda llegar.
+
+## Limitaciones conocidas
+
+- Todavía no admite el inicio de sesión interactivo con teclado (doble factor), los saltos a través de otros servidores (`ProxyJump`) ni los certificados de host.
+- Solo redirecciones locales (`ssh -L`); las remotas (`-R`) y las SOCKS (`-D`) no están soportadas.
+- Los servidores se añaden a mano; `~/.ssh/config` no se lee.
+- En GNOME, el icono de la bandeja necesita la extensión AppIndicator. Sin ella, desactiva la opción de la bandeja en los ajustes o vuelve a iniciar la aplicación para recuperar su ventana.
 
 ## Desarrollo
 
@@ -52,6 +60,7 @@ Después:
 ```bash
 npm install
 npm run tauri dev    # ejecuta la aplicación con recarga en caliente
+npm run dev          # solo la interfaz en un navegador, con un backend simulado en lugar de SSH
 npm run tauri build  # genera los instaladores en src-tauri/target/release/bundle/
 npm run typecheck    # comprueba los tipos del frontend
 cargo test --manifest-path src-tauri/Cargo.toml  # ejecuta las pruebas de Rust

@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Identifiers: npm package and crate `server-ports` (lib `server_ports_lib`), bundle id `com.chensy.server-ports`.
 
-Status (2026-10-25): early development. The Rust core is being written first: the data model, the profile and known-hosts stores, credential-store access, the prompt plumbing and the error types exist. The tunnel engine, the Tauri commands, the tray and the real UI do not yet (`lib.rs` still runs a bare Tauri builder and the React UI is the stock create-tauri-app template). Update this line as that changes.
+Status (2026-10-26): early development. The Rust core (model, stores, secrets, prompts, the `ssh/` engine and the `Backend` facade), the Tauri layer (commands, tray, close-to-tray, autostart, single instance) and the React UI (English and 简体中文, light and dark) all exist and run on Linux. `cargo test` passes against an in-process SSH server, the UI was checked in a browser against the mock backend, and the real app starts, shows its tray icon and loads the UI. Never built on macOS or Windows (the Windows branch of `connect_agent` is not compiled anywhere yet), and nothing is released. Known gaps: no keyboard-interactive (2FA) login, ProxyJump, host certificates, `-R` / `-D` forwards or `~/.ssh/config` import. Update this line as that changes.
 
 ## Commands
 
@@ -18,12 +18,13 @@ Run from the repo root.
 |---|---|
 | Install JS dependencies | `npm install` |
 | Run the app (Vite + Tauri, hot reload) | `npm run tauri dev` |
-| Frontend only | `npm run dev` (port 1420; Tauri APIs such as `invoke` do not work in a plain browser) |
+| Frontend only | `npm run dev` (port 1420). Outside the desktop shell the UI runs against `MockBackend` (dev builds only) with sample servers; the password is `hunter2`, and `window.mock.drop(id)` / `.fail(id)` in the console provoke a lost connection or a failure |
 | Type-check the frontend | `npm run typecheck` |
 | Build the frontend | `npm run build` (`tsc && vite build`) |
 | Build installers | `npm run tauri build` (output in `src-tauri/target/release/bundle/`) |
 | Rust tests | `cargo test --manifest-path src-tauri/Cargo.toml` |
 | Rust lint / format | `cargo clippy --manifest-path src-tauri/Cargo.toml` / `cargo fmt --manifest-path src-tauri/Cargo.toml` |
+| Regenerate the app icons | `npm run tauri icon src-tauri/icons/icon.svg`, then delete the `android/` and `ios/` folders and `64x64.png` it adds (desktop only) |
 
 - Rust comes from rustup in `~/.cargo/bin`. If `cargo` is not found in a non-login shell, run `. "$HOME/.cargo/env"` first. The minimum Rust version is 1.89 (edition 2024).
 - On Debian/Ubuntu the Tauri build needs system libraries (webkit2gtk 4.1, libsoup 3, librsvg, libxdo, ...); see https://tauri.app/start/prerequisites/.
@@ -31,16 +32,23 @@ Run from the repo root.
 
 ## Layout
 
-- `src/`: React UI. TypeScript is strict, and `noUnusedLocals` / `noUnusedParameters` are on.
-- `src-tauri/`: Rust crate and Tauri config. `tauri.conf.json` holds the window and bundle settings. `capabilities/default.json` lists what the webview may call, so add the permission there when you add a plugin or command that needs one.
+- `src/`: React UI. TypeScript is strict, and `noUnusedLocals` / `noUnusedParameters` are on. Services are classes (object-oriented on purpose), read from components through hooks.
+  - `api/`: the `Backend` interface, `TauriBackend` (IPC), `MockBackend` (browser development only, tree-shaken from production), the wire types in `types.ts` (keep them in step with `model.rs` and `backend.rs`) and `errors.ts`.
+  - `state/`: `AppStore` (all UI state, read through `useSyncExternalStore`; merges the startup snapshot and the event stream by `rev` and `seq`), `ThroughputTracker`, `Appearance` (light, dark, system), `prefs.ts` (localStorage), `services.tsx` (context and hooks).
+  - `i18n/`: the `I18n` class and typed catalogs. `en.ts` is the source; `zh-CN.ts` has to define the same keys.
+  - `components/`, `styles/` (plain CSS on the variables in `tokens.css`, no CSS framework).
+- `src-tauri/`: Rust crate and Tauri config. `tauri.conf.json` holds the window, CSP and bundle settings. `capabilities/default.json` lists what the webview may call, so add the permission there when you add a plugin that needs one (the app's own commands are allowed by default). `icons/icon.svg` is the source of the icon set.
 - `src-tauri/src/`: the core knows nothing about Tauri or the UI; it reports through an event sink.
   - `model.rs`: persisted config (`Profile`, `Forward`, `Auth`, `Settings`), runtime state (`ProfileRuntime`, `ConnState`, `ForwardState`), prompts, and the `Event` enum.
-  - `events.rs`: the `EventSink` trait, with `NullSink` and `ChannelSink` (tests). The Tauri layer is meant to plug in a sink that forwards events to the webview.
-  - `interaction.rs`: questions put to the human (trust this host key? what is the password?) as awaited requests answered through `answer_*`, with a 90 s timeout.
+  - `events.rs`: the `EventSink` trait, with `NullSink` and `ChannelSink` (tests).
+  - `interaction.rs`: questions put to the human (trust this host key? what is the password?) as awaited requests answered through `answer_*`, with a 90 s timeout. Open questions are remembered, so a window that opens late can still show them.
   - `known_hosts.rs`: trust-on-first-use host key store (`known_hosts.json`).
   - `secrets.rs`: passwords and key passphrases in the OS credential store via `keyring`.
   - `store.rs`: `profiles.json` persistence.
-  - `ssh/`: the tunnel engine. The shape described in `ssh/mod.rs` is a `TunnelManager` facade, one `Tunnel` per running profile (connect, serve, back off, reconnect), a `Session` per authenticated SSH connection and a `Forwarder` per local listener, where every accepted socket becomes a `direct-tcpip` channel. So far only `state.rs` (shared runtime state and recent log lines) and `error.rs` (`TunnelError`) exist.
+  - `backend.rs`: the `Backend` facade over the store, the tunnels, the secrets and the settings. Every Tauri command is one call on it, and it is where behaviour is tested.
+  - `ssh/`: the tunnel engine: `TunnelManager` (`manager.rs`), one `Tunnel` per running profile (`tunnel.rs`: connect, serve, back off, reconnect), a `Session` per authenticated SSH connection (`session.rs`), a `Forwarder` per local listener (`forward.rs`; every accepted socket becomes a `direct-tcpip` channel), `Authenticator` (`auth.rs`), `ClientHandler` (`handler.rs`, host key checks), `Env` / `Reporter` / `StatusBoard` (`env.rs`, shared state and recent log lines) and `TunnelError` (`error.rs`).
+  - `app.rs` (plugins, setup, window and exit events, the sink that forwards events to the webview), `commands.rs` (thin Tauri commands) and `tray.rs` (tray icon and menu) are the only files that know Tauri.
+  - `testing.rs` (tests only): an in-process russh server, an echo target and helpers shared by the tests.
   - `util.rs`: `now_ms`, `new_id`, `expand_tilde`, `write_atomic`.
 
 Keep this list in sync when you add or move modules.
@@ -52,11 +60,14 @@ Keep this list in sync when you add or move modules.
 - **Errors carry a stable `code`.** `ErrorInfo { code, detail }`, `ValidationError.code` and `TunnelError::code()` are what the UI keys its localised messages on; `detail` is raw technical text shown under that headline. Do not put user-facing sentences in Rust, and do not rename codes casually.
 - **Retry policy lives in `TunnelError::retryable()`.** Only transient failures (network, timeout, closed session) are retried. Auth failures, rejected or changed host keys and unavailable local ports are not.
 - **Host keys:** an unseen key asks the user. A different key of an already-known key type is reported as `HostKeyCheck::Changed` (a possible man-in-the-middle), surfaced as `TunnelError::HostKeyChanged` and never retried. Server host certificates are not supported.
-- **Secrets never touch `profiles.json`.** They go to the OS credential store (`secrets.rs`). The keyring calls block, so they run through `spawn_blocking`.
+- **Secrets never touch `profiles.json`.** They go to the OS credential store (`secrets.rs`), and only if the user ticks "remember". The keyring calls block, so they run through `spawn_blocking`. A typed secret that worked is also kept in memory while its tunnel runs (`KeptSecrets` in `ssh/auth.rs`), so an automatic reconnect does not ask again; a kept secret the server turns down is dropped and the user is asked.
 - **Files are written atomically** (`util::write_atomic`), and a corrupt `profiles.json` is moved to `profiles.json.corrupt` instead of being overwritten. Stored data must keep loading after the format grows, so new fields need `#[serde(default)]`.
 - **Forwards bind to `127.0.0.1` by default.** Any other bind address is a deliberate choice. Duplicate local ports are rejected in `Profile::normalize`.
 - **Dependency choices are deliberate.** `russh` uses the `ring` backend instead of `aws-lc-rs` so that all three OSes build in CI without cmake or NASM. The release profile keeps `panic = "unwind"` so a panicking tunnel task cannot take the resident app down. Read the comments in `src-tauri/Cargo.toml` before changing either.
 - **The Vite dev server is pinned to port 1420** (`strictPort`) and ignores `src-tauri/` in its watcher.
+- **The window is created hidden** and shown when the UI calls `ui_ready` (or after 5 s). A hidden page paints no frames, so the UI must not wait for `requestAnimationFrame` before calling it. Starting with `--hidden` (the autostart entry) keeps it hidden.
+- **Tauri's npm packages and Rust crates must share their major.minor version** (`tauri dev` complains otherwise); the `@tauri-apps/*` packages are pinned with `~` for that reason.
+- **UI details that are deliberate:** addresses are shown as `127.0.0.1:port` rather than `localhost` (which may resolve to `::1` first); CSS avoids `light-dark()`, `color-mix()` and transitions of the `d` attribute because the oldest supported WebKitGTK and WKWebView lack them; the dark colour tokens appear twice in `tokens.css` (media query and explicit theme), keep them equal.
 
 ## Documentation
 
