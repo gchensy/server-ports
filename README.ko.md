@@ -8,7 +8,7 @@
 
 </div>
 
-> **상태: 초기 개발 중.** 아직 정식 릴리스는 없습니다. 터널 엔진과 인터페이스는 갖춰졌고, CI가 세 운영체제용 설치 파일을 빌드하지만, 지금까지 Linux에서만 실행해 보았으며 macOS와 Windows는 검증하지 않았습니다.
+> **상태: 초기 개발 중.** 아직 정식 릴리스는 없습니다. 터널 엔진과 인터페이스는 갖춰졌고, CI가 Linux, macOS, Windows에서 빌드와 테스트를 거쳐 설치 파일을 만들지만, 앱 자체는 지금까지 Linux에서만 실행해 보았으며 macOS와 Windows용 설치 파일은 검증하지 않았습니다.
 
 Server Ports는 SSH 포트 포워딩을 계속 유지해 주는 작은 크로스플랫폼 데스크톱 앱(Windows, macOS, Linux)입니다. 서버를 고르고 필요한 포트를 나열하면 `localhost`에 바로 나타납니다. `ssh -L`과 같은 일을, 터미널을 열고 명령어를 입력하는 번거로움 없이 할 수 있습니다.
 
@@ -48,7 +48,7 @@ Server Ports는 SSH 포트 포워딩을 계속 유지해 주는 작은 크로스
 사전 준비:
 
 - Node.js(현재 LTS)와 npm
-- Rust 1.89 이상([rustup](https://rustup.rs))
+- Rust 1.90 이상([rustup](https://rustup.rs))
 - 사용 중인 OS에 필요한 Tauri 시스템 의존성. [Tauri 사전 요구 사항](https://tauri.app/start/prerequisites/)을 참고하세요. Debian/Ubuntu의 경우:
 
 ```bash

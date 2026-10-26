@@ -8,7 +8,7 @@
 
 </div>
 
-> **Status: frühe Entwicklung.** Es gibt noch keine veröffentlichte Version. Tunnel-Engine und Oberfläche stehen, und die CI baut Installer für alle drei Systeme, aber die App wurde bisher nur unter Linux ausgeführt; macOS und Windows sind ungetestet.
+> **Status: frühe Entwicklung.** Es gibt noch keine veröffentlichte Version. Tunnel-Engine und Oberfläche stehen, und die CI baut, testet und paketiert die App unter Linux, macOS und Windows, aber ausgeführt wurde sie bisher nur unter Linux; die Installer für macOS und Windows sind ungetestet.
 
 Server Ports ist eine kleine plattformübergreifende Desktop-App (Windows, macOS, Linux), die Ihre SSH-Portweiterleitungen am Laufen hält. Server auswählen, benötigte Ports eintragen, und sie erscheinen auf `localhost`. Das ist dasselbe wie `ssh -L`, nur ohne Terminal-Gefummel.
 
@@ -48,7 +48,7 @@ Das entspricht `ssh -L 127.0.0.1:8080:127.0.0.1:80 user@server`. Das Ziel wird a
 Voraussetzungen:
 
 - Node.js (aktuelle LTS) und npm
-- Rust 1.89 oder neuer ([rustup](https://rustup.rs))
+- Rust 1.90 oder neuer ([rustup](https://rustup.rs))
 - Die Tauri-Systemabhängigkeiten für Ihr Betriebssystem, siehe [Tauri-Voraussetzungen](https://tauri.app/start/prerequisites/). Unter Debian/Ubuntu:
 
 ```bash

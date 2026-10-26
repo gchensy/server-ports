@@ -8,7 +8,7 @@
 
 </div>
 
-> **ステータス：開発初期段階。** 正式リリースはまだありません。トンネルエンジンとインターフェースはできており、CI で 3 つの OS 向けのインストーラーをビルドしますが、これまでに Linux でしか実行しておらず、macOS と Windows は未検証です。
+> **ステータス：開発初期段階。** 正式リリースはまだありません。トンネルエンジンとインターフェースはできており、CI が Linux・macOS・Windows でビルドとテストを行ってインストーラーを作りますが、アプリ自体はこれまでに Linux でしか実行しておらず、macOS と Windows のインストーラーは未検証です。
 
 Server Ports は、SSH のポートフォワーディングを維持し続けてくれる小さなクロスプラットフォームのデスクトップアプリ（Windows、macOS、Linux）です。サーバーを選び、必要なポートを並べるだけで、それらが `localhost` に現れます。`ssh -L` と同じことを、ターミナルを開いてコマンドを打つ手間なしで行えます。
 
@@ -48,7 +48,7 @@ Server Ports は、SSH のポートフォワーディングを維持し続けて
 前提条件：
 
 - Node.js（現行の LTS）と npm
-- Rust 1.89 以降（[rustup](https://rustup.rs)）
+- Rust 1.90 以降（[rustup](https://rustup.rs)）
 - お使いの OS 向けの Tauri のシステム依存パッケージ。[Tauri の前提条件](https://tauri.app/start/prerequisites/)を参照してください。Debian/Ubuntu の場合：
 
 ```bash

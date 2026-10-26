@@ -8,7 +8,7 @@
 
 </div>
 
-> **状态：早期开发中。** 目前还没有正式发布的版本。隧道引擎和界面都已就绪，CI 会为三个系统构建安装包，但应用目前只在 Linux 上运行过，macOS 和 Windows 尚未测试。
+> **状态：早期开发中。** 目前还没有正式发布的版本。隧道引擎和界面都已就绪，CI 会在 Linux、macOS 和 Windows 上构建、测试并打包，但应用目前只在 Linux 上运行过，macOS 和 Windows 的安装包尚未测试。
 
 Server Ports 是一款小巧的跨平台桌面应用（Windows、macOS、Linux），帮你持续维持 SSH 端口转发。选一台服务器，列出需要的端口，它们就会出现在 `localhost` 上。效果等同于 `ssh -L`，但不用再反复开终端、敲命令。
 
@@ -48,7 +48,7 @@ Server Ports 是一款小巧的跨平台桌面应用（Windows、macOS、Linux�
 前置条件：
 
 - Node.js（当前 LTS 版本）和 npm
-- Rust 1.89 或更高版本（[rustup](https://rustup.rs)）
+- Rust 1.90 或更高版本（[rustup](https://rustup.rs)）
 - 当前系统所需的 Tauri 依赖，参见 [Tauri 前置条件](https://tauri.app/start/prerequisites/)。Debian/Ubuntu 上：
 
 ```bash
