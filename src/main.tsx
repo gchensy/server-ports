@@ -1,9 +1,25 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import App from "./App";
+import { createBackend } from "./api";
+import { Services, ServicesProvider } from "./state/services";
+import "./styles/tokens.css";
+import "./styles/base.css";
+import "./styles/components.css";
+import "./styles/app.css";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+async function main() {
+  const services = new Services(await createBackend());
+  document.documentElement.lang = services.i18n.locale;
+  createRoot(document.getElementById("root") as HTMLElement).render(
+    <StrictMode>
+      <ServicesProvider services={services}>
+        <App />
+      </ServicesProvider>
+    </StrictMode>,
+  );
+  await services.store.start();
+  await services.store.sendTrayLabels();
+}
+
+void main();

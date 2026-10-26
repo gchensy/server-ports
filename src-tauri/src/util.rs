@@ -53,7 +53,10 @@ mod tests {
     #[test]
     fn tilde_is_expanded_only_as_a_path_prefix() {
         let home = dirs::home_dir().expect("home dir");
-        assert_eq!(expand_tilde("~/.ssh/id_ed25519"), home.join(".ssh/id_ed25519"));
+        assert_eq!(
+            expand_tilde("~/.ssh/id_ed25519"),
+            home.join(".ssh/id_ed25519")
+        );
         assert_eq!(expand_tilde("~"), home);
         assert_eq!(expand_tilde("/etc/hosts"), PathBuf::from("/etc/hosts"));
         assert_eq!(expand_tilde("a~/b"), PathBuf::from("a~/b"));

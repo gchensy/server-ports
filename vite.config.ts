@@ -8,6 +8,10 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(() => ({
   plugins: [react()],
 
+  // The bundle is read from disk, so splitting it would only add complexity (the nine language
+  // catalogues alone are ~100 kB); the default 500 kB warning is about downloads.
+  build: { chunkSizeWarningLimit: 1000 },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

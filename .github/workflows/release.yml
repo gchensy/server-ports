@@ -1,0 +1,80 @@
+name: Release
+
+# Pushing a tag such as v0.2.0 builds the installers for every platform and attaches them to a
+# draft GitHub release; publish the draft once they look right. Starting the workflow by hand builds
+# the same installers but only keeps them as workflow artifacts, so nothing is released.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  installers:
+    name: installers (${{ matrix.name }})
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            os: ubuntu-22.04 # the oldest glibc we can build on, so the packages run on more systems
+            args: ""
+          - name: macOS Apple silicon
+            os: macos-latest
+            args: --target aarch64-apple-darwin
+          - name: macOS Intel
+            os: macos-latest
+            args: --target x86_64-apple-darwin
+          - name: Windows x64
+            os: windows-latest
+            args: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: The tag must match the app version
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          want="${GITHUB_REF_NAME#v}"
+          for have in \
+            "$(node -p "require('./package.json').version")" \
+            "$(node -p "require('./src-tauri/tauri.conf.json').version")" \
+            "$(sed -n 's/^version = "\(.*\)"/\1/p' src-tauri/Cargo.toml | head -n 1)"; do
+            [ "$have" = "$want" ] || { echo "::error::tag $GITHUB_REF_NAME does not match the version $have"; exit 1; }
+          done
+      - name: Install the system libraries Tauri links against
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev patchelf xdg-utils
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+          key: ${{ matrix.name }}
+      - run: npm ci
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No Apple Developer ID yet: "-" signs the app ad hoc, which Apple silicon requires of
+          # anything it runs. Real signing and notarization are described in the README.
+          APPLE_SIGNING_IDENTITY: "-"
+        with:
+          # Without a tag name and a release name the action only builds, and does not release.
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: ${{ github.ref_type == 'tag' && 'Server Ports v__VERSION__' || '' }}
+          releaseBody: >-
+            Installers for Linux (.deb, .rpm, .AppImage), macOS (.dmg) and Windows (.exe, .msi).
+            The builds are not code-signed, so macOS and Windows ask for a confirmation the first
+            time the app is opened.
+          generateReleaseNotes: true
+          releaseDraft: true
+          uploadWorkflowArtifacts: ${{ github.ref_type != 'tag' }}
+          args: ${{ matrix.args }}

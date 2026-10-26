@@ -16,7 +16,7 @@ use crate::util::new_id;
 
 /// SSH servers drop clients that have not authenticated within `LoginGraceTime` (120s by default),
 /// so there is no point in waiting for an answer for longer than this.
-const PROMPT_TIMEOUT: Duration = Duration::from_secs(90);
+pub const PROMPT_TIMEOUT: Duration = Duration::from_secs(90);
 
 #[derive(Debug)]
 pub struct SecretReply {
@@ -25,9 +25,15 @@ pub struct SecretReply {
     pub remember: bool,
 }
 
-enum Pending {
+enum Reply {
     HostKey(oneshot::Sender<bool>),
     Secret(oneshot::Sender<Option<SecretReply>>),
+}
+
+struct Pending {
+    /// What the UI was asked, kept for a window that opens while the question is still open.
+    question: Event,
+    reply: Reply,
 }
 
 pub struct Interaction {
@@ -71,11 +77,11 @@ impl Interaction {
             interaction: self,
             request_id: request.request_id.clone(),
         };
-        self.pending
-            .lock()
-            .unwrap()
-            .insert(request.request_id.clone(), Pending::HostKey(tx));
-        self.sink.emit(Event::HostKey(request));
+        self.ask(
+            request.request_id.clone(),
+            Event::HostKey(request),
+            Reply::HostKey(tx),
+        );
         matches!(tokio::time::timeout(PROMPT_TIMEOUT, rx).await, Ok(Ok(true)))
     }
 
@@ -87,48 +93,58 @@ impl Interaction {
             interaction: self,
             request_id: request.request_id.clone(),
         };
-        self.pending
-            .lock()
-            .unwrap()
-            .insert(request.request_id.clone(), Pending::Secret(tx));
-        self.sink.emit(Event::Secret(request));
+        self.ask(
+            request.request_id.clone(),
+            Event::Secret(request),
+            Reply::Secret(tx),
+        );
         match tokio::time::timeout(PROMPT_TIMEOUT, rx).await {
             Ok(Ok(reply)) => reply,
             _ => None,
         }
     }
 
+    /// The questions nobody has answered yet, as the events that announced them.
+    pub fn open_questions(&self) -> Vec<Event> {
+        let pending = self.pending.lock().unwrap();
+        pending.values().map(|p| p.question.clone()).collect()
+    }
+
     /// Returns `false` when the question no longer exists (timed out or withdrawn).
     pub fn answer_host_key(&self, request_id: &str, trust: bool) -> bool {
-        // The guard must not outlive this statement: the arms below lock again.
-        let taken = self.pending.lock().unwrap().remove(request_id);
-        match taken {
-            Some(Pending::HostKey(tx)) => tx.send(trust).is_ok(),
-            Some(other) => {
-                self.pending
-                    .lock()
-                    .unwrap()
-                    .insert(request_id.to_string(), other);
-                false
-            }
-            None => false,
+        match self.take(request_id, |reply| matches!(reply, Reply::HostKey(_))) {
+            Some(Reply::HostKey(tx)) => tx.send(trust).is_ok(),
+            _ => false,
         }
     }
 
     /// `reply == None` cancels the prompt.
     pub fn answer_secret(&self, request_id: &str, reply: Option<SecretReply>) -> bool {
-        let taken = self.pending.lock().unwrap().remove(request_id);
-        match taken {
-            Some(Pending::Secret(tx)) => tx.send(reply).is_ok(),
-            Some(other) => {
-                self.pending
-                    .lock()
-                    .unwrap()
-                    .insert(request_id.to_string(), other);
-                false
-            }
-            None => false,
+        match self.take(request_id, |reply| matches!(reply, Reply::Secret(_))) {
+            Some(Reply::Secret(tx)) => tx.send(reply).is_ok(),
+            _ => false,
         }
+    }
+
+    fn ask(&self, request_id: String, question: Event, reply: Reply) {
+        self.pending.lock().unwrap().insert(
+            request_id,
+            Pending {
+                question: question.clone(),
+                reply,
+            },
+        );
+        self.sink.emit(question);
+    }
+
+    /// Takes the question out if it is still open and `wanted` accepts what kind it is. An answer
+    /// of the wrong kind leaves it alone.
+    fn take(&self, request_id: &str, wanted: fn(&Reply) -> bool) -> Option<Reply> {
+        let mut pending = self.pending.lock().unwrap();
+        if !pending.get(request_id).is_some_and(|p| wanted(&p.reply)) {
+            return None;
+        }
+        pending.remove(request_id).map(|p| p.reply)
     }
 }
 
@@ -205,6 +221,23 @@ mod tests {
         };
         assert_eq!(request_id, req.request_id);
         assert!(!hub.answer_secret(&req.request_id, None));
+    }
+
+    #[tokio::test]
+    async fn a_late_window_can_ask_which_questions_are_open() {
+        let (hub, mut events) = interaction();
+        let asking = {
+            let hub = hub.clone();
+            tokio::spawn(async move { hub.confirm_host_key(host_key_request()).await })
+        };
+        let Some(Event::HostKey(req)) = events.recv().await else {
+            panic!("expected a host key request");
+        };
+        let open = hub.open_questions();
+        assert!(matches!(&open[..], [Event::HostKey(r)] if r.request_id == req.request_id));
+        assert!(hub.answer_host_key(&req.request_id, false));
+        assert!(!asking.await.unwrap());
+        assert!(hub.open_questions().is_empty());
     }
 
     #[tokio::test]

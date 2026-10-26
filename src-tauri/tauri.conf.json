@@ -12,13 +12,19 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Server Ports",
-        "width": 800,
-        "height": 600
+        "width": 1040,
+        "height": 700,
+        "minWidth": 780,
+        "minHeight": 540,
+        "center": true,
+        "visible": false
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost",
+      "devCsp": "default-src 'self' http://localhost:1420; script-src 'self' 'unsafe-inline' http://localhost:1420; style-src 'self' 'unsafe-inline'; img-src 'self' data: http://localhost:1420; connect-src ipc: http://ipc.localhost http://localhost:1420 ws://localhost:1420"
     }
   },
   "bundle": {
@@ -30,6 +36,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "category": "Utility",
+    "shortDescription": "Map remote server ports to your computer over SSH",
+    "longDescription": "Server Ports keeps SSH port forwards open from the tray: pick the ports of a remote server, and they are available on this computer, reconnecting by themselves."
   }
 }

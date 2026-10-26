@@ -56,6 +56,17 @@ pub enum Auth {
     Agent,
 }
 
+impl Auth {
+    /// The one kind of secret this method may ask for or remember, if any.
+    pub fn secret_kind(&self) -> Option<SecretKind> {
+        match self {
+            Auth::Password => Some(SecretKind::Password),
+            Auth::Key { .. } => Some(SecretKind::Passphrase),
+            Auth::Agent => None,
+        }
+    }
+}
+
 /// `local bind_host:local_port  ->  remote_host:remote_port` (as seen from the server).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -162,6 +173,17 @@ impl Forward {
 }
 
 impl Profile {
+    /// Whether a tunnel started from `self` has to be restarted to match `other`. Only the name and
+    /// `connect_on_launch` can change under a running tunnel.
+    pub fn needs_restart_for(&self, other: &Profile) -> bool {
+        let essentials = |p: &Profile| Profile {
+            name: String::new(),
+            connect_on_launch: false,
+            ..p.clone()
+        };
+        essentials(self) != essentials(other)
+    }
+
     /// Trims and defaults the fields, assigns ids and rejects unusable profiles.
     pub fn normalize(&mut self) -> Result<(), ValidationError> {
         self.name = self.name.trim().to_string();
@@ -180,7 +202,10 @@ impl Profile {
         if let Auth::Key { path } = &mut self.auth {
             *path = path.trim().to_string();
             if path.is_empty() {
-                return Err(ValidationError::new("keyPath", "private key path is required"));
+                return Err(ValidationError::new(
+                    "keyPath",
+                    "private key path is required",
+                ));
             }
         }
         if self.forwards.is_empty() {
@@ -194,8 +219,9 @@ impl Profile {
         }
         for (i, a) in self.forwards.iter().enumerate() {
             for (j, b) in self.forwards.iter().enumerate().skip(i + 1) {
-                let same_interface =
-                    a.bind_host == b.bind_host || is_unspecified(&a.bind_host) || is_unspecified(&b.bind_host);
+                let same_interface = a.bind_host == b.bind_host
+                    || is_unspecified(&a.bind_host)
+                    || is_unspecified(&b.bind_host);
                 if a.local_port == b.local_port && same_interface {
                     return Err(ValidationError::new(
                         "duplicatePort",
@@ -228,7 +254,11 @@ pub struct ErrorInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
-#[serde(tag = "state", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "state",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum ConnState {
     Idle,
     Connecting,
@@ -240,11 +270,27 @@ pub enum ConnState {
         error: ErrorInfo,
     },
     /// Gave up: retrying would not help (wrong password, rejected host key, ...).
-    Failed { error: ErrorInfo },
+    Failed {
+        error: ErrorInfo,
+    },
+}
+
+impl ConnState {
+    /// Up, on its way up or on its way back up: what a "disconnect" would stop.
+    pub fn is_active(&self) -> bool {
+        matches!(
+            self,
+            ConnState::Connecting | ConnState::Connected | ConnState::Reconnecting { .. }
+        )
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
-#[serde(tag = "state", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "state",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum ForwardState {
     Pending,
     Listening,
@@ -273,6 +319,22 @@ pub struct ProfileRuntime {
     pub forwards: Vec<ForwardRuntime>,
     /// Unix ms at which the current SSH session was established.
     pub connected_at: Option<u64>,
+    /// Grows with every change. Updates can arrive out of order (and a snapshot can race live
+    /// events), so the UI keeps whichever has the higher `rev`.
+    pub rev: u64,
+}
+
+impl ForwardRuntime {
+    pub fn new(id: &str, state: ForwardState) -> Self {
+        Self {
+            id: id.to_string(),
+            state,
+            active: 0,
+            total: 0,
+            bytes_up: 0,
+            bytes_down: 0,
+        }
+    }
 }
 
 impl ProfileRuntime {
@@ -282,6 +344,7 @@ impl ProfileRuntime {
             conn: ConnState::Idle,
             forwards: Vec::new(),
             connected_at: None,
+            rev: 0,
         }
     }
 }
@@ -297,6 +360,8 @@ pub enum LogLevel {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LogLine {
+    /// Position in the log of the whole app; orders lines and lets the UI drop duplicates.
+    pub seq: u64,
     pub profile_id: ProfileId,
     pub ts: u64,
     pub level: LogLevel,
@@ -315,6 +380,8 @@ pub enum SecretKind {
 }
 
 impl SecretKind {
+    pub const ALL: [SecretKind; 2] = [SecretKind::Password, SecretKind::Passphrase];
+
     pub fn as_str(self) -> &'static str {
         match self {
             SecretKind::Password => "password",
@@ -352,14 +419,20 @@ pub struct SecretRequest {
 
 /// Everything the engine tells the outside world. One enum, one IPC event channel.
 #[derive(Debug, Clone, Serialize)]
-#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum Event {
     State(ProfileRuntime),
     Log(LogLine),
     HostKey(HostKeyRequest),
     Secret(SecretRequest),
     /// A pending question is no longer relevant (answered, timed out or abandoned).
-    PromptClosed { request_id: String },
+    PromptClosed {
+        request_id: String,
+    },
 }
 
 #[cfg(test)]
@@ -397,7 +470,10 @@ mod tests {
         p.normalize().unwrap();
         assert_eq!(p.host, "example.com");
         assert_eq!(p.username, "root");
-        assert_eq!(p.name, "example.com", "an empty name falls back to the host");
+        assert_eq!(
+            p.name, "example.com",
+            "an empty name falls back to the host"
+        );
         assert!(!p.id.is_empty());
         assert!(!p.forwards[0].id.is_empty());
         assert_eq!(p.forwards[0].bind_host, "127.0.0.1");
@@ -414,7 +490,8 @@ mod tests {
 
     #[test]
     fn rejects_unusable_profiles() {
-        let cases: Vec<(Box<dyn Fn(&mut Profile)>, &str)> = vec![
+        type Mutation = Box<dyn Fn(&mut Profile)>;
+        let cases: Vec<(Mutation, &str)> = vec![
             (Box::new(|p| p.host = "  ".into()), "host"),
             (Box::new(|p| p.host = "a b".into()), "host"),
             (Box::new(|p| p.port = 0), "port"),
@@ -464,6 +541,37 @@ mod tests {
     }
 
     #[test]
+    fn only_connection_settings_restart_a_running_tunnel() {
+        let mut before = profile();
+        before.normalize().unwrap();
+        let mut renamed = before.clone();
+        renamed.name = "other".into();
+        renamed.connect_on_launch = true;
+        assert!(!before.needs_restart_for(&renamed));
+
+        let edits: [fn(&mut Profile); 5] = [
+            |p| p.host = "elsewhere".into(),
+            |p| p.username = "you".into(),
+            |p| p.auth = Auth::Password,
+            |p| p.forwards[0].remote_port = 81,
+            |p| p.auto_reconnect = false,
+        ];
+        for edit in edits {
+            let mut after = before.clone();
+            edit(&mut after);
+            assert!(before.needs_restart_for(&after));
+        }
+    }
+
+    #[test]
+    fn each_auth_method_asks_for_its_own_kind_of_secret() {
+        assert_eq!(Auth::Password.secret_kind(), Some(SecretKind::Password));
+        let key = Auth::Key { path: "k".into() };
+        assert_eq!(key.secret_kind(), Some(SecretKind::Passphrase));
+        assert_eq!(Auth::Agent.secret_kind(), None);
+    }
+
+    #[test]
     fn json_shape_is_what_the_ui_expects() {
         let mut p = profile();
         p.auth = Auth::Key {
@@ -488,10 +596,12 @@ mod tests {
             },
             forwards: vec![],
             connected_at: None,
+            rev: 7,
         };
         let json = serde_json::to_value(Event::State(runtime)).unwrap();
         assert_eq!(json["type"], "state");
         assert_eq!(json["profileId"], "p");
+        assert_eq!(json["rev"], 7);
         assert_eq!(json["conn"]["state"], "reconnecting");
         assert_eq!(json["conn"]["retryAt"], 5);
         assert_eq!(json["conn"]["error"]["code"], "network");
