@@ -47,7 +47,7 @@ Server Ports — небольшое кроссплатформенное нас�
 Требования:
 
 - Node.js (актуальная LTS) и npm
-- Rust 1.89 или новее ([rustup](https://rustup.rs))
+- Rust 1.90 или новее ([rustup](https://rustup.rs))
 - Системные зависимости Tauri для вашей ОС, см. [требования Tauri](https://tauri.app/start/prerequisites/). В Debian/Ubuntu:
 
 ```bash

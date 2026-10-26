@@ -26,7 +26,7 @@ Run from the repo root.
 | Rust lint / format | `cargo clippy --manifest-path src-tauri/Cargo.toml` / `cargo fmt --manifest-path src-tauri/Cargo.toml` |
 | Regenerate the app icons | `npm run tauri icon src-tauri/icons/icon.svg`, then delete the `android/` and `ios/` folders and `64x64.png` it adds (desktop only) |
 
-- Rust comes from rustup in `~/.cargo/bin`. If `cargo` is not found in a non-login shell, run `. "$HOME/.cargo/env"` first. The minimum Rust version is 1.89 (edition 2024).
+- Rust comes from rustup in `~/.cargo/bin`. If `cargo` is not found in a non-login shell, run `. "$HOME/.cargo/env"` first. The minimum Rust version is 1.90 (edition 2024).
 - On Debian/Ubuntu the Tauri build needs system libraries (webkit2gtk 4.1, libsoup 3, librsvg, libxdo, ...); see https://tauri.app/start/prerequisites/.
 - There is no JS test runner yet. Rust unit tests sit next to the code in `#[cfg(test)] mod tests`.
 
@@ -65,6 +65,7 @@ Keep this list in sync when you add or move modules.
 - **Files are written atomically** (`util::write_atomic`), and a corrupt `profiles.json` is moved to `profiles.json.corrupt` instead of being overwritten. Stored data must keep loading after the format grows, so new fields need `#[serde(default)]`.
 - **Forwards bind to `127.0.0.1` by default.** Any other bind address is a deliberate choice. Duplicate local ports are rejected in `Profile::normalize`.
 - **Dependency choices are deliberate.** `russh` uses the `ring` backend instead of `aws-lc-rs` so that all three OSes build in CI without cmake or NASM. The release profile keeps `panic = "unwind"` so a panicking tunnel task cannot take the resident app down. Read the comments in `src-tauri/Cargo.toml` before changing either.
+- **Tauri 2.12 or newer.** With tao 0.35 (Tauri 2.11) the minimize, maximize and close buttons of the window did nothing on GNOME / Wayland: tao wrapped its own header bar in an event box that took every click. tao 0.36 replaced that code, and Tauri 2.12 needs Rust 1.90. Do not go back below it.
 - **The Vite dev server is pinned to port 1420** (`strictPort`) and ignores `src-tauri/` in its watcher.
 - **The window is created hidden** and shown when the UI calls `ui_ready` (or after 5 s). A hidden page paints no frames, so the UI must not wait for `requestAnimationFrame` before calling it. Starting with `--hidden` (the autostart entry) keeps it hidden.
 - **Tauri's npm packages and Rust crates must share their major.minor version** (`tauri dev` complains otherwise); the `@tauri-apps/*` packages are pinned with `~` for that reason.

@@ -47,7 +47,7 @@ Server Ports 是一款小巧的跨平台桌面應用程式（Windows、macOS、L
 前置需求：
 
 - Node.js（目前的 LTS 版本）與 npm
-- Rust 1.89 或更新版本（[rustup](https://rustup.rs)）
+- Rust 1.90 或更新版本（[rustup](https://rustup.rs)）
 - 你的作業系統所需的 Tauri 相依套件，請參閱 [Tauri 前置需求](https://tauri.app/start/prerequisites/)。在 Debian/Ubuntu 上：
 
 ```bash

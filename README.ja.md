@@ -47,7 +47,7 @@ Server Ports は、SSH のポートフォワーディングを維持し続けて
 前提条件：
 
 - Node.js（現行の LTS）と npm
-- Rust 1.89 以降（[rustup](https://rustup.rs)）
+- Rust 1.90 以降（[rustup](https://rustup.rs)）
 - お使いの OS 向けの Tauri のシステム依存パッケージ。[Tauri の前提条件](https://tauri.app/start/prerequisites/)を参照してください。Debian/Ubuntu の場合：
 
 ```bash

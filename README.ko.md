@@ -47,7 +47,7 @@ Server Ports는 SSH 포트 포워딩을 계속 유지해 주는 작은 크로스
 사전 준비:
 
 - Node.js(현재 LTS)와 npm
-- Rust 1.89 이상([rustup](https://rustup.rs))
+- Rust 1.90 이상([rustup](https://rustup.rs))
 - 사용 중인 OS에 필요한 Tauri 시스템 의존성. [Tauri 사전 요구 사항](https://tauri.app/start/prerequisites/)을 참고하세요. Debian/Ubuntu의 경우:
 
 ```bash

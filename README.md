@@ -47,7 +47,7 @@ That is the same as `ssh -L 127.0.0.1:8080:127.0.0.1:80 user@server`. The target
 Prerequisites:
 
 - Node.js (current LTS) and npm
-- Rust 1.89 or newer ([rustup](https://rustup.rs))
+- Rust 1.90 or newer ([rustup](https://rustup.rs))
 - Tauri's system dependencies for your OS, see the [Tauri prerequisites](https://tauri.app/start/prerequisites/). On Debian/Ubuntu:
 
 ```bash

@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Map remote server ports to your local machine over SSH"
 authors = ["chensy"]
 edition = "2024"
-rust-version = "1.89"
+rust-version = "1.90"
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
@@ -17,7 +17,9 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon", "image-png"] }
+# 2.12 or newer: it brings tao 0.36+, whose window frame reacts to clicks on Wayland (the title bar
+# buttons of tao 0.35 were dead on GNOME). It needs Rust 1.90, hence `rust-version` above.
+tauri = { version = "2.12", features = ["tray-icon", "image-png"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-log = "2"
 serde = { version = "1", features = ["derive"] }
