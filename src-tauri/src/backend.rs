@@ -10,6 +10,7 @@ use crate::model::{
 };
 use crate::secrets::blocking;
 use crate::ssh::{Env, TunnelManager};
+use crate::ssh_config::{LocalUser, SshConfig, SshHost};
 use crate::store::{Store, StoreError};
 
 /// Everything the UI needs to draw itself when it starts or after a reload. Events that race with
@@ -23,6 +24,16 @@ pub struct Snapshot {
     pub logs: Vec<LogLine>,
     /// Host key and password questions that nobody has answered yet.
     pub questions: Vec<Event>,
+}
+
+/// A server found in the user's SSH config.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DiscoveredHost {
+    #[serde(flatten)]
+    pub host: SshHost,
+    /// One of the user's servers already (same host, user and port).
+    pub already_added: bool,
 }
 
 /// What a command can fail with. `code` is stable, so the UI can localise it.
@@ -48,6 +59,9 @@ pub enum BackendError {
     /// The operating system's credential store failed.
     #[error("{detail}")]
     Keychain { detail: String },
+    /// The SSH config exists but cannot be read.
+    #[error("{detail}")]
+    SshConfig { detail: String },
 }
 
 impl From<ValidationError> for BackendError {
@@ -144,6 +158,27 @@ impl Backend {
             log::warn!("could not forget the saved secrets of a deleted profile: {e}");
         }
         Ok(())
+    }
+
+    /// The servers in the user's SSH config, with the ones like a server of this app marked.
+    /// Nothing is saved: the UI saves the ones the user picks through [`Backend::save_profile`],
+    /// so that they are checked like any other.
+    pub fn discover_ssh_hosts(
+        &self,
+        user: &LocalUser,
+    ) -> Result<Vec<DiscoveredHost>, BackendError> {
+        let config = SshConfig::load(user).map_err(|e| BackendError::SshConfig {
+            detail: e.to_string(),
+        })?;
+        let known = self.store.profiles();
+        Ok(config
+            .hosts(user)
+            .into_iter()
+            .map(|host| DiscoveredHost {
+                already_added: known.iter().any(|p| p.is_same_server(&host.profile)),
+                host,
+            })
+            .collect())
     }
 
     // -----------------------------------------------------------------------------------------
@@ -661,6 +696,76 @@ mod tests {
         for id in [&eager.id, &lazy.id] {
             assert_eq!(app.runtime(id).unwrap().conn, ConnState::Idle);
         }
+    }
+
+    #[tokio::test]
+    async fn the_servers_of_the_ssh_config_are_offered_with_the_known_ones_marked() {
+        let app = App::new(None);
+        let home = tempfile::tempdir().unwrap();
+        let config = home.path().join(".ssh/config");
+        std::fs::create_dir_all(&config).unwrap();
+        let user = LocalUser {
+            name: "alice".into(),
+            home: home.path().to_path_buf(),
+        };
+
+        // The file is there but cannot be read: the user hears about it.
+        let error = app.backend.discover_ssh_hosts(&user).unwrap_err();
+        assert!(matches!(error, BackendError::SshConfig { .. }));
+        assert_eq!(serde_json::to_value(&error).unwrap()["code"], "sshConfig");
+
+        std::fs::remove_dir(&config).unwrap();
+        std::fs::write(
+            &config,
+            "Host web
+               HostName web.example.com
+               User deploy
+               LocalForward 8080 localhost:80
+             Host db
+               HostName db.example.com
+               ProxyJump bastion.example.com
+            ",
+        )
+        .unwrap();
+        let found = app.backend.discover_ssh_hosts(&user).unwrap();
+        let summary = |found: &[DiscoveredHost]| -> Vec<_> {
+            found
+                .iter()
+                .map(|h| (h.host.profile.name.clone(), h.already_added))
+                .collect()
+        };
+        assert_eq!(
+            summary(&found),
+            [("web".into(), false), ("db".into(), false)]
+        );
+
+        // The same account on the same server is the same server, whatever it is called here.
+        let mut known = profile(22, Auth::Agent, &[(free_port(), 80)]);
+        known.name = "mine".into();
+        known.host = "WEB.example.com".into();
+        known.username = "deploy".into();
+        app.backend.save_profile(known).await.unwrap();
+        let found = app.backend.discover_ssh_hosts(&user).unwrap();
+        assert_eq!(
+            summary(&found),
+            [("web".into(), true), ("db".into(), false)]
+        );
+        assert_eq!(
+            app.backend.snapshot().profiles.len(),
+            1,
+            "nothing was saved"
+        );
+
+        let json = serde_json::to_value(&found[1]).unwrap();
+        assert_eq!(json["alreadyAdded"], false);
+        assert_eq!(json["proxy"], "ProxyJump");
+        assert_eq!(json["profile"]["name"], "db");
+        assert_eq!(json["profile"]["username"], "alice");
+        assert_eq!(json["profile"]["auth"]["type"], "agent");
+        assert_eq!(json["profile"]["forwards"], serde_json::json!([]));
+        let json = serde_json::to_value(&found[0]).unwrap();
+        assert_eq!(json["proxy"], serde_json::Value::Null);
+        assert_eq!(json["profile"]["forwards"][0]["localPort"], 8080);
     }
 
     #[tokio::test]

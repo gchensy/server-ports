@@ -48,6 +48,7 @@ pub fn run() {
             commands::snapshot,
             commands::save_profile,
             commands::delete_profile,
+            commands::discover_ssh_hosts,
             commands::connect,
             commands::disconnect,
             commands::answer_host_key,

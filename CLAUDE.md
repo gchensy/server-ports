@@ -45,7 +45,8 @@ Run from the repo root.
   - `known_hosts.rs`: trust-on-first-use host key store (`known_hosts.json`).
   - `secrets.rs`: passwords and key passphrases in the OS credential store via `keyring`.
   - `store.rs`: `profiles.json` persistence.
-  - `backend.rs`: the `Backend` facade over the store, the tunnels, the secrets and the settings. Every Tauri command is one call on it, and it is where behaviour is tested.
+  - `backend.rs`: the `Backend` facade over the store, the tunnels, the secrets, the settings and the servers found in `~/.ssh/config`. Every Tauri command is one call on it, and it is where behaviour is tested.
+  - `ssh_config.rs`: reads `~/.ssh/config` and its `Include`s (read-only) into `SshHost`s: a not yet saved `Profile` per `Host` name, plus the `Proxy` it needs, if any. `LocalUser` is whose home and name the `~` and `%d` / `%u` refer to.
   - `ssh/`: the tunnel engine: `TunnelManager` (`manager.rs`), one `Tunnel` per running profile (`tunnel.rs`: connect, serve, back off, reconnect), a `Session` per authenticated SSH connection (`session.rs`), a `Forwarder` per local listener (`forward.rs`; every accepted socket becomes a `direct-tcpip` channel), `Authenticator` (`auth.rs`), `ClientHandler` (`handler.rs`, host key checks), `Env` / `Reporter` / `StatusBoard` (`env.rs`, shared state and recent log lines) and `TunnelError` (`error.rs`).
   - `app.rs` (plugins, setup, window and exit events, the sink that forwards events to the webview), `commands.rs` (thin Tauri commands) and `tray.rs` (tray icon and menu) are the only files that know Tauri.
   - `testing.rs` (tests only): an in-process russh server, an echo target and helpers shared by the tests.

@@ -6,9 +6,10 @@ use tauri::{AppHandle, State};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::app::Launch;
-use crate::backend::{Backend, BackendError, Snapshot};
+use crate::backend::{Backend, BackendError, DiscoveredHost, Snapshot};
 use crate::interaction::SecretReply;
 use crate::model::{Profile, SecretKind, Settings};
+use crate::ssh_config::LocalUser;
 use crate::tray::{Labels, Tray};
 
 type Core<'a> = State<'a, Arc<Backend>>;
@@ -38,6 +39,12 @@ pub async fn delete_profile(
     backend.delete_profile(&id).await?;
     tray.invalidate();
     Ok(())
+}
+
+/// The servers of the user's `~/.ssh/config`; nothing is saved.
+#[tauri::command]
+pub fn discover_ssh_hosts(backend: Core) -> Result<Vec<DiscoveredHost>, BackendError> {
+    backend.discover_ssh_hosts(&LocalUser::current())
 }
 
 #[tauri::command]

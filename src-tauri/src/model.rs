@@ -184,6 +184,13 @@ impl Profile {
         essentials(self) != essentials(other)
     }
 
+    /// Whether both reach the same account on the same server, whatever they are called.
+    pub fn is_same_server(&self, other: &Profile) -> bool {
+        self.host.eq_ignore_ascii_case(&other.host)
+            && self.port == other.port
+            && self.username == other.username
+    }
+
     /// Trims and defaults the fields, assigns ids and rejects unusable profiles.
     pub fn normalize(&mut self) -> Result<(), ValidationError> {
         self.name = self.name.trim().to_string();
@@ -560,6 +567,28 @@ mod tests {
             let mut after = before.clone();
             edit(&mut after);
             assert!(before.needs_restart_for(&after));
+        }
+    }
+
+    #[test]
+    fn a_server_is_the_same_by_host_user_and_port() {
+        let mut before = profile();
+        before.normalize().unwrap();
+        let mut renamed = before.clone();
+        renamed.name = "other".into();
+        renamed.auth = Auth::Password;
+        renamed.host = "EXAMPLE.com".into();
+        assert!(before.is_same_server(&renamed));
+
+        let edits: [fn(&mut Profile); 3] = [
+            |p| p.host = "elsewhere.example.com".into(),
+            |p| p.port = 2222,
+            |p| p.username = "you".into(),
+        ];
+        for edit in edits {
+            let mut after = before.clone();
+            edit(&mut after);
+            assert!(!before.is_same_server(&after));
         }
     }
 
