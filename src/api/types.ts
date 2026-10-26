@@ -32,6 +32,18 @@ export interface Settings {
   closeToTray: boolean;
 }
 
+/** How a host of the SSH config is reached when not directly; the engine cannot do either yet. */
+export type Proxy = "ProxyJump" | "ProxyCommand";
+
+/** A server found in the user's `~/.ssh/config`. */
+export interface DiscoveredHost {
+  /** Not saved yet (the id is empty). It can still lack what the form needs, such as a port mapping. */
+  profile: Profile;
+  proxy: Proxy | null;
+  /** One of the user's servers already (same host, user and port). */
+  alreadyAdded: boolean;
+}
+
 /** A failure the UI can localise: `code` is stable, `detail` is raw technical text. */
 export interface ErrorInfo {
   code: string;
@@ -132,7 +144,8 @@ export type BackendError =
   | { code: "invalid"; field: string; forwardIndex: number | null; detail: string }
   | { code: "notFound" }
   | { code: "storage"; detail: string }
-  | { code: "keychain"; detail: string };
+  | { code: "keychain"; detail: string }
+  | { code: "sshConfig"; detail: string };
 
 export interface TrayLabels {
   show: string;

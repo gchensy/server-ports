@@ -67,11 +67,13 @@
 }
 
 .sidebar__footer {
+  display: grid;
+  gap: 2px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
 }
 
-.sidebar__settings {
+.sidebar__action {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -81,10 +83,11 @@
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-2);
+  text-align: left;
   transition: background-color 0.15s, color 0.15s;
 }
 
-.sidebar__settings:hover {
+.sidebar__action:hover {
   background: var(--surface-3);
   color: var(--text);
 }
@@ -656,6 +659,29 @@
 .empty__art {
   width: min(390px, 100%);
   height: auto;
+}
+
+/* The offer to take over the servers of the SSH config. */
+
+.empty__found {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  width: max-content;
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-2);
+}
+
+.empty__found svg {
+  flex: none;
+  color: var(--accent);
 }
 
 .art-body {

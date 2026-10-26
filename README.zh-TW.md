@@ -15,6 +15,7 @@ Server Ports 是一款小巧的跨平台桌面應用程式（Windows、macOS、L
 ## 功能
 
 - **伺服器設定檔**：每台 SSH 伺服器一份設定檔，可新增任意數量的連接埠對應。
+- **從 SSH 設定匯入**：在側邊欄或起始畫面中，從 `~/.ssh/config` 挑選伺服器，一次複製到 Server Ports。主機名稱、使用者、連接埠、金鑰檔案（`IdentityFile`）與連接埠轉送（`LocalForward`）都會一併帶入，包括從 `Host *` 區塊與 `Include` 檔案繼承的設定。這只是一次性的複製：SSH 設定檔只會被讀取，不會被修改。
 - **三種登入方式**：密碼、私密金鑰檔案（可搭配通關密語），或 ssh-agent（OpenSSH agent 或 Pageant）。
 - **機密資料不寫入設定檔**：只有在你選擇「記住」時，密碼與金鑰通關密語才會存放到 macOS 鑰匙圈、Windows 認證管理員或 Linux Secret Service；否則它們只會在伺服器連線期間保留在記憶體中。
 - **主機金鑰驗證**：第一次看到的伺服器金鑰會連同指紋一併顯示，唯有你確認後才會信任；金鑰若有變動，也會被標示出來。
@@ -39,7 +40,7 @@ Server Ports 是一款小巧的跨平台桌面應用程式（Windows、macOS、L
 
 - 尚不支援鍵盤互動式（雙因素）登入、跳板機（`ProxyJump`）與主機憑證。
 - 僅支援本機轉送（`ssh -L`），不支援遠端轉送（`-R`）與 SOCKS 代理（`-D`）。
-- 伺服器需要手動新增，不會讀取 `~/.ssh/config`。
+- 從 `~/.ssh/config` 匯入只是一次性的複製，之後對該檔案的修改不會同步。需要 `ProxyJump` 或 `ProxyCommand` 的主機會列出，但目前無法匯入；`Match` 區塊會被略過，`RemoteForward` 與 `DynamicForward` 會被忽略。沒有 `LocalForward` 的主機會開啟表單，讓你自行選擇連接埠。
 - 在 GNOME 上，系統匣圖示需要 AppIndicator 擴充功能。沒有它的話，請在設定中關閉系統匣常駐的選項，或再次啟動應用程式把視窗找回來。
 
 ## 開發

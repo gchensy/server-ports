@@ -10,6 +10,7 @@ export const zhTW: Catalog = {
 
   "sidebar.new": "新增伺服器",
   "sidebar.settings": "設定",
+  "sidebar.import": "從 SSH 設定匯入",
   "sidebar.servers": "伺服器",
   "sidebar.connect": "連線到 {name}",
   "sidebar.disconnect": "中斷與 {name} 的連線",
@@ -54,6 +55,9 @@ export const zhTW: Catalog = {
   "empty.title": "在本機存取伺服器上的連接埠",
   "empty.body": "新增一台伺服器並選好需要的連接埠，它們就會出現在這台電腦上，在背景保持暢通並自動重新連線。",
   "empty.cta": "新增第一台伺服器",
+  "empty.found.one": "在 SSH 設定中找到 {n} 台伺服器",
+  "empty.found.other": "在 SSH 設定中找到 {n} 台伺服器",
+  "empty.import": "匯入…",
 
   "profile.new.title": "新增伺服器",
   "profile.edit.title": "編輯伺服器",
@@ -83,6 +87,7 @@ export const zhTW: Catalog = {
   "profile.connectOnLaunch": "應用程式啟動時連線",
   "profile.restartNote": "更改連線設定後，儲存時會重新連線這台伺服器。",
   "profile.saveAndConnect": "儲存並連線",
+  "profile.imported": "來自 SSH 設定。請新增要轉發的連接埠，然後儲存。",
 
   "form.listenOn": "本機監聽",
   "form.forwardTo": "轉送到",
@@ -108,6 +113,15 @@ export const zhTW: Catalog = {
   "invalid.bindHost": "本機位址必須是 IP 位址。",
   "invalid.remoteHost": "遠端主機不能包含空格。",
   "invalid.duplicatePort": "已有另一個對應使用了這個本機連接埠。",
+
+  "import.title": "從 SSH 設定匯入",
+  "import.intro": "選擇要複製到 Server Ports 的伺服器。SSH 設定檔只會被讀取，不會被修改。",
+  "import.empty": "SSH 設定中找不到伺服器。",
+  "import.added": "已新增",
+  "import.unsupported": "尚未支援：{kind}",
+  "import.noPorts": "需選擇連接埠",
+  "import.selected": "已選 {n} 項",
+  "import.confirm": "匯入",
 
   "hostKey.title": "要信任這台伺服器嗎？",
   "hostKey.body": "{name}（{host}:{port}）出示了先前未曾見過的金鑰。信任之前，請先核對指紋是否與預期一致。",
@@ -181,6 +195,7 @@ export const zhTW: Catalog = {
   "error.bind.title": "無法開啟這個連接埠",
   "error.storage.title": "無法儲存",
   "error.keychain.title": "系統鑰匙圈無法使用",
+  "error.sshConfig.title": "無法讀取 SSH 設定",
   "error.notFound.title": "這台伺服器已不存在",
   "error.other.title": "發生錯誤",
   "error.unknown.title": "發生錯誤",

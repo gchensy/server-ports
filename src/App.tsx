@@ -1,10 +1,11 @@
 import { AnimatePresence, MotionConfig } from "motion/react";
 import { useEffect, useState } from "react";
-import type { ProfileId } from "./api/types";
+import type { Profile, ProfileId } from "./api/types";
 import { ConfirmDelete } from "./components/ConfirmDelete";
 import { Detail } from "./components/Detail";
 import { EmptyState } from "./components/EmptyState";
 import { HostKeyDialog } from "./components/HostKeyDialog";
+import { ImportDialog } from "./components/ImportDialog";
 import { ProfileDialog } from "./components/ProfileDialog";
 import { SecretDialog } from "./components/SecretDialog";
 import { SettingsDialog } from "./components/SettingsDialog";
@@ -15,6 +16,7 @@ import { useAppState, useI18n, useServices } from "./state/services";
 
 type Dialog =
   | { kind: "profile"; id: ProfileId | null }
+  | { kind: "import" }
   | { kind: "settings" }
   | { kind: "delete"; id: ProfileId };
 
@@ -26,7 +28,10 @@ export default function App() {
   const empty = useAppState((state) => state.profiles.length === 0);
   const prompt = useAppState((state) => state.prompts[0]);
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  // Servers picked from the SSH config that the form has to complete, one after the other.
+  const [unsaved, setUnsaved] = useState<Profile[]>([]);
   const close = () => setDialog(null);
+  const imported = dialog === null ? unsaved[0] : undefined;
 
   // The window is created hidden; it may appear once there is something to look at. A hidden
   // page paints no frames, so waiting for one would wait forever.
@@ -48,10 +53,17 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="app">
-        <Sidebar onNew={() => setDialog({ kind: "profile", id: null })} onSettings={() => setDialog({ kind: "settings" })} />
+        <Sidebar
+          onNew={() => setDialog({ kind: "profile", id: null })}
+          onImport={() => setDialog({ kind: "import" })}
+          onSettings={() => setDialog({ kind: "settings" })}
+        />
         <main className="main">
           {empty ? (
-            <EmptyState onAdd={() => setDialog({ kind: "profile", id: null })} />
+            <EmptyState
+              onAdd={() => setDialog({ kind: "profile", id: null })}
+              onImport={() => setDialog({ kind: "import" })}
+            />
           ) : (
             <Detail
               onEdit={(id) => setDialog({ kind: "profile", id })}
@@ -62,6 +74,24 @@ export default function App() {
       </div>
       <AnimatePresence>
         {dialog?.kind === "profile" && <ProfileDialog key="profile" profileId={dialog.id} onClose={close} />}
+        {imported && (
+          <ProfileDialog
+            key={`imported-${imported.name}`}
+            profileId={null}
+            imported={imported}
+            onClose={() => setUnsaved((rest) => rest.slice(1))}
+          />
+        )}
+        {dialog?.kind === "import" && (
+          <ImportDialog
+            key="import"
+            onClose={close}
+            onFinish={(rest) => {
+              setUnsaved(rest);
+              close();
+            }}
+          />
+        )}
         {dialog?.kind === "settings" && <SettingsDialog key="settings" onClose={close} />}
         {dialog?.kind === "delete" && <ConfirmDelete key="delete" profileId={dialog.id} onClose={close} />}
         {prompt?.type === "hostKey" && <HostKeyDialog key={prompt.requestId} prompt={prompt} />}

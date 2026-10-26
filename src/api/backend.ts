@@ -1,4 +1,5 @@
 import type {
+  DiscoveredHost,
   EngineEvent,
   Profile,
   ProfileId,
@@ -16,6 +17,8 @@ export interface Backend {
 
   saveProfile(profile: Profile): Promise<Profile>;
   deleteProfile(id: ProfileId): Promise<void>;
+  /** The servers in the user's `~/.ssh/config`. Nothing is saved. */
+  discoverSshHosts(): Promise<DiscoveredHost[]>;
   connect(id: ProfileId): Promise<void>;
   disconnect(id: ProfileId): Promise<void>;
 

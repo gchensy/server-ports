@@ -229,6 +229,21 @@ export class AppStore {
     return saved;
   }
 
+  /** Saves servers found in the SSH config, one after the other, and hands back the ones the core refused. */
+  async importProfiles(profiles: Profile[]): Promise<Profile[]> {
+    const refused: Profile[] = [];
+    for (const profile of profiles) {
+      try {
+        await this.saveProfile(profile);
+      } catch (raw) {
+        // Anything but a refusal (the disk, the keychain) has been reported, and would only fail again.
+        if (toCommandError(raw).error.code !== "invalid") break;
+        refused.push(profile);
+      }
+    }
+    return refused;
+  }
+
   async deleteProfile(id: ProfileId): Promise<void> {
     const deleted = await this.attempt(async () => {
       await this.backend.deleteProfile(id);

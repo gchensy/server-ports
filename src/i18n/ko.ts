@@ -10,6 +10,7 @@ export const ko: Catalog = {
 
   "sidebar.new": "새 서버",
   "sidebar.settings": "설정",
+  "sidebar.import": "SSH 설정에서 가져오기",
   "sidebar.servers": "서버",
   "sidebar.connect": "{name} 연결",
   "sidebar.disconnect": "{name} 연결 끊기",
@@ -55,6 +56,9 @@ export const ko: Catalog = {
   "empty.body":
     "서버를 추가하고 필요한 포트를 고르면 이 컴퓨터에서 사용할 수 있습니다. 연결은 백그라운드에서 유지되고, 끊어지면 알아서 다시 연결됩니다.",
   "empty.cta": "첫 번째 서버 추가",
+  "empty.found.one": "SSH 설정에서 서버 {n}개를 찾았습니다",
+  "empty.found.other": "SSH 설정에서 서버 {n}개를 찾았습니다",
+  "empty.import": "가져오기…",
 
   "profile.new.title": "새 서버",
   "profile.edit.title": "서버 편집",
@@ -84,6 +88,7 @@ export const ko: Catalog = {
   "profile.connectOnLaunch": "앱을 시작할 때 연결",
   "profile.restartNote": "연결 설정을 바꾸고 저장하면 이 서버에 다시 연결합니다.",
   "profile.saveAndConnect": "저장하고 연결",
+  "profile.imported": "SSH 설정에서 가져왔습니다. 포워딩할 포트를 추가한 뒤 저장하세요.",
 
   "form.listenOn": "수신 대기",
   "form.forwardTo": "전달 대상",
@@ -109,6 +114,15 @@ export const ko: Catalog = {
   "invalid.bindHost": "로컬 주소는 IP 주소여야 합니다.",
   "invalid.remoteHost": "원격 호스트에는 공백을 넣을 수 없습니다.",
   "invalid.duplicatePort": "다른 포워딩이 이미 이 로컬 포트를 사용하고 있습니다.",
+
+  "import.title": "SSH 설정에서 가져오기",
+  "import.intro": "Server Ports로 복사할 서버를 선택하세요. SSH 설정 파일은 읽기만 하며 변경하지 않습니다.",
+  "import.empty": "SSH 설정에서 서버를 찾지 못했습니다.",
+  "import.added": "이미 추가됨",
+  "import.unsupported": "아직 지원되지 않음: {kind}",
+  "import.noPorts": "포트 선택 필요",
+  "import.selected": "선택됨: {n}",
+  "import.confirm": "가져오기",
 
   "hostKey.title": "이 서버를 신뢰하시겠습니까?",
   "hostKey.body":
@@ -185,6 +199,7 @@ export const ko: Catalog = {
   "error.bind.title": "포트를 열 수 없습니다",
   "error.storage.title": "저장할 수 없습니다",
   "error.keychain.title": "시스템 키체인을 사용할 수 없습니다",
+  "error.sshConfig.title": "SSH 설정을 읽을 수 없습니다",
   "error.notFound.title": "이 서버는 더 이상 없습니다",
   "error.other.title": "문제가 발생했습니다",
   "error.unknown.title": "문제가 발생했습니다",

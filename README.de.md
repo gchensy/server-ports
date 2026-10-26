@@ -15,6 +15,7 @@ Server Ports ist eine kleine plattformübergreifende Desktop-App (Windows, macOS
 ## Funktionen
 
 - **Serverprofile**: ein Profil pro SSH-Server, mit beliebig vielen Port-Zuordnungen.
+- **Import aus Ihrer SSH-Konfiguration**: Wählen Sie Server aus `~/.ssh/config` aus und kopieren Sie sie in einem Rutsch nach Server Ports, über die Seitenleiste oder den Startbildschirm. Hostname, Benutzer, Port, Schlüsseldatei (`IdentityFile`) und Weiterleitungen (`LocalForward`) werden übernommen, einschließlich der Einstellungen, die von `Host *`-Blöcken und eingebundenen `Include`-Dateien geerbt werden. Es ist eine einmalige Kopie: Ihre SSH-Konfiguration wird nur gelesen, nie verändert.
 - **Drei Anmeldearten**: Passwort, Datei mit privatem Schlüssel (optional mit Passphrase) oder ssh-agent (OpenSSH-Agent oder Pageant).
 - **Geheimnisse bleiben aus der Konfigurationsdatei heraus**: Auf Wunsch werden Passwörter und Schlüssel-Passphrasen im macOS-Schlüsselbund, in der Windows-Anmeldeinformationsverwaltung oder im Linux Secret Service abgelegt; andernfalls liegen sie nur im Arbeitsspeicher, solange ein Server verbunden ist.
 - **Überprüfung des Host-Schlüssels**: Der Schlüssel eines bislang unbekannten Servers wird mit seinem Fingerabdruck angezeigt und nur akzeptiert, wenn Sie das bestätigen; ein geänderter Schlüssel wird gemeldet.
@@ -39,7 +40,7 @@ Das entspricht `ssh -L 127.0.0.1:8080:127.0.0.1:80 user@server`. Das Ziel wird a
 
 - Noch keine tastaturinteraktive Anmeldung (Zwei-Faktor), keine Sprungserver (`ProxyJump`) und keine Host-Zertifikate.
 - Nur lokale Weiterleitungen (`ssh -L`); Remote- (`-R`) und SOCKS-Weiterleitungen (`-D`) werden nicht unterstützt.
-- Server werden von Hand hinzugefügt; `~/.ssh/config` wird nicht gelesen.
+- Der Import aus `~/.ssh/config` ist eine einmalige Kopie; spätere Änderungen an der Datei werden nicht übernommen. Hosts, die `ProxyJump` oder `ProxyCommand` brauchen, werden aufgelistet, lassen sich aber noch nicht importieren; `Match`-Blöcke werden übersprungen, `RemoteForward`- und `DynamicForward`-Zeilen ignoriert. Ein Host ohne `LocalForward` öffnet das Formular, damit Sie seine Ports auswählen können.
 - Unter GNOME braucht das Tray-Symbol die AppIndicator-Erweiterung. Ohne sie schalten Sie die Tray-Option in den Einstellungen aus oder starten die App erneut, um ihr Fenster zurückzuholen.
 
 ## Entwicklung

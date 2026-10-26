@@ -9,6 +9,7 @@ export const en = {
 
   "sidebar.new": "New server",
   "sidebar.settings": "Settings",
+  "sidebar.import": "Import from SSH config",
   "sidebar.servers": "Servers",
   "sidebar.connect": "Connect {name}",
   "sidebar.disconnect": "Disconnect {name}",
@@ -54,6 +55,9 @@ export const en = {
   "empty.body":
     "Add a server and pick the ports you need. They show up on this computer, stay open in the background and reconnect by themselves.",
   "empty.cta": "Add your first server",
+  "empty.found.one": "Found {n} server in your SSH config",
+  "empty.found.other": "Found {n} servers in your SSH config",
+  "empty.import": "Import…",
 
   "profile.new.title": "New server",
   "profile.edit.title": "Edit server",
@@ -85,6 +89,7 @@ export const en = {
   "profile.connectOnLaunch": "Connect when the app starts",
   "profile.restartNote": "Saving changes to the connection reconnects this server.",
   "profile.saveAndConnect": "Save & connect",
+  "profile.imported": "From your SSH config. Add the ports to forward, then save.",
 
   "form.listenOn": "Listen on",
   "form.forwardTo": "Forward to",
@@ -111,6 +116,15 @@ export const en = {
   "invalid.bindHost": "The local address must be an IP address.",
   "invalid.remoteHost": "The remote host must not contain spaces.",
   "invalid.duplicatePort": "Another mapping already uses this local port.",
+
+  "import.title": "Import from SSH config",
+  "import.intro": "Choose the servers to copy into Server Ports. Your SSH config file is only read, never changed.",
+  "import.empty": "No servers found in your SSH config.",
+  "import.added": "Already added",
+  "import.unsupported": "Not supported yet: {kind}",
+  "import.noPorts": "ports to choose",
+  "import.selected": "Selected: {n}",
+  "import.confirm": "Import",
 
   "hostKey.title": "Trust this server?",
   "hostKey.body":
@@ -189,6 +203,7 @@ export const en = {
   "error.bind.title": "The port could not be opened",
   "error.storage.title": "Could not save",
   "error.keychain.title": "The system keychain is not available",
+  "error.sshConfig.title": "The SSH config can't be read",
   "error.notFound.title": "This server no longer exists",
   "error.other.title": "Something went wrong",
   "error.unknown.title": "Something went wrong",

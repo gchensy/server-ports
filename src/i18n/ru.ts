@@ -10,6 +10,7 @@ export const ru: Catalog = {
 
   "sidebar.new": "Новый сервер",
   "sidebar.settings": "Настройки",
+  "sidebar.import": "Импорт из SSH-конфига",
   "sidebar.servers": "Серверы",
   "sidebar.connect": "Подключить {name}",
   "sidebar.disconnect": "Отключить {name}",
@@ -57,6 +58,11 @@ export const ru: Catalog = {
   "empty.body":
     "Добавьте сервер и выберите нужные порты. Они появятся на этом компьютере, будут оставаться открытыми в фоне и сами восстановят соединение.",
   "empty.cta": "Добавить первый сервер",
+  "empty.found.one": "Найден {n} сервер в вашей конфигурации SSH",
+  "empty.found.few": "Найдено {n} сервера в вашей конфигурации SSH",
+  "empty.found.many": "Найдено {n} серверов в вашей конфигурации SSH",
+  "empty.found.other": "Найдено {n} сервера в вашей конфигурации SSH",
+  "empty.import": "Импорт…",
 
   "profile.new.title": "Новый сервер",
   "profile.edit.title": "Изменение сервера",
@@ -87,6 +93,7 @@ export const ru: Catalog = {
   "profile.connectOnLaunch": "Подключать при запуске приложения",
   "profile.restartNote": "При сохранении изменений параметров соединения сервер будет подключён заново.",
   "profile.saveAndConnect": "Сохранить и подключить",
+  "profile.imported": "Из вашей конфигурации SSH. Добавьте порты для проброса и сохраните.",
 
   "form.listenOn": "Слушать на",
   "form.forwardTo": "Пробросить на",
@@ -113,6 +120,16 @@ export const ru: Catalog = {
   "invalid.bindHost": "Локальный адрес должен быть IP-адресом.",
   "invalid.remoteHost": "Удалённый хост не должен содержать пробелов.",
   "invalid.duplicatePort": "Этот локальный порт уже используется другим пробросом.",
+
+  "import.title": "Импорт из конфигурации SSH",
+  "import.intro":
+    "Выберите серверы, которые нужно скопировать в Server Ports. Файл конфигурации SSH только читается и никогда не изменяется.",
+  "import.empty": "В конфигурации SSH серверы не найдены.",
+  "import.added": "Уже добавлен",
+  "import.unsupported": "Пока не поддерживается: {kind}",
+  "import.noPorts": "порты нужно выбрать",
+  "import.selected": "Выбрано: {n}",
+  "import.confirm": "Импортировать",
 
   "hostKey.title": "Доверять этому серверу?",
   "hostKey.body":
@@ -190,6 +207,7 @@ export const ru: Catalog = {
   "error.bind.title": "Не удалось открыть порт",
   "error.storage.title": "Не удалось сохранить",
   "error.keychain.title": "Системная связка ключей недоступна",
+  "error.sshConfig.title": "Не удалось прочитать конфигурацию SSH",
   "error.notFound.title": "Этого сервера больше нет",
   "error.other.title": "Что-то пошло не так",
   "error.unknown.title": "Что-то пошло не так",

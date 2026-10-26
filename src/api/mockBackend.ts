@@ -1,6 +1,7 @@
 import type { Backend } from "./backend";
 import { CommandError } from "./errors";
 import type {
+  DiscoveredHost,
   EngineEvent,
   ErrorInfo,
   Forward,
@@ -62,6 +63,75 @@ function seedProfiles(): Profile[] {
       username: "root",
       auth: { type: "password" },
       forwards: [forward("lg-ssh", "", 2222, 22)],
+    },
+  ];
+}
+
+/** What a pretend `~/.ssh/config` holds: one that is here already, two behind a proxy, one without ports. */
+function seedSshHosts(): Omit<DiscoveredHost, "alreadyAdded">[] {
+  const base = { id: "", port: 22, username: "alice", autoReconnect: true, connectOnLaunch: false };
+  return [
+    {
+      proxy: null,
+      profile: {
+        ...base,
+        name: "web-prod",
+        host: "web.example.com",
+        port: 2222,
+        username: "deploy",
+        auth: { type: "key", path: "~/.ssh/id_ed25519" },
+        forwards: [forward("", "", 8080, 80), forward("", "", 8443, 443)],
+      },
+    },
+    {
+      proxy: null,
+      profile: {
+        ...base,
+        name: "analytics",
+        host: "10.0.4.20",
+        username: "ubuntu",
+        auth: { type: "key", path: "~/.ssh/analytics.pem" },
+        forwards: [forward("", "Jupyter", 8888, 8888)],
+      },
+    },
+    {
+      // The same account on the same server as "Staging web".
+      proxy: null,
+      profile: {
+        ...base,
+        name: "staging",
+        host: "staging.example.com",
+        username: "ubuntu",
+        auth: { type: "agent" },
+        forwards: [forward("", "", 8080, 80)],
+      },
+    },
+    {
+      proxy: "ProxyJump",
+      profile: {
+        ...base,
+        name: "internal-api",
+        host: "api.internal",
+        username: "deploy",
+        auth: { type: "agent" },
+        forwards: [forward("", "", 3000, 3000)],
+      },
+    },
+    {
+      proxy: "ProxyCommand",
+      profile: {
+        ...base,
+        name: "build-box",
+        host: "build.example.com",
+        username: "ci",
+        auth: { type: "agent" },
+        forwards: [],
+      },
+    },
+    {
+      // Nothing to forward in the file: the form asks for the ports.
+      proxy: null,
+      profile: { ...base, name: "scratch", host: "scratch.example.com", auth: { type: "agent" }, forwards: [] },
     },
   ];
 }
@@ -171,6 +241,19 @@ export class MockBackend implements Backend {
     await this.disconnect(id);
     this.profiles = this.profiles.filter((p) => p.id !== id);
     this.runtimes.delete(id);
+  }
+
+  async discoverSshHosts(): Promise<DiscoveredHost[]> {
+    await sleep(200);
+    return seedSshHosts().map((host) => ({
+      ...host,
+      alreadyAdded: this.profiles.some(
+        (p) =>
+          p.host.toLowerCase() === host.profile.host.toLowerCase() &&
+          p.port === host.profile.port &&
+          p.username === host.profile.username,
+      ),
+    }));
   }
 
   async connect(id: ProfileId): Promise<void> {

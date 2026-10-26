@@ -10,6 +10,7 @@ export const es: Catalog = {
 
   "sidebar.new": "Nuevo servidor",
   "sidebar.settings": "Configuración",
+  "sidebar.import": "Importar config. SSH",
   "sidebar.servers": "Servidores",
   "sidebar.connect": "Conectar {name}",
   "sidebar.disconnect": "Desconectar {name}",
@@ -55,6 +56,9 @@ export const es: Catalog = {
   "empty.body":
     "Añade un servidor y elige los puertos que necesitas. Aparecerán en este equipo, seguirán abiertos en segundo plano y se reconectarán solos.",
   "empty.cta": "Añade tu primer servidor",
+  "empty.found.one": "Se encontró {n} servidor en tu configuración SSH",
+  "empty.found.other": "Se encontraron {n} servidores en tu configuración SSH",
+  "empty.import": "Importar…",
 
   "profile.new.title": "Nuevo servidor",
   "profile.edit.title": "Editar servidor",
@@ -85,6 +89,7 @@ export const es: Catalog = {
   "profile.connectOnLaunch": "Conectar al iniciar la aplicación",
   "profile.restartNote": "Al guardar cambios en la conexión, este servidor se reconecta.",
   "profile.saveAndConnect": "Guardar y conectar",
+  "profile.imported": "Viene de tu configuración SSH. Añade los puertos que quieras reenviar y guarda.",
 
   "form.listenOn": "Escuchar en",
   "form.forwardTo": "Reenviar a",
@@ -110,6 +115,16 @@ export const es: Catalog = {
   "invalid.bindHost": "La dirección local debe ser una dirección IP.",
   "invalid.remoteHost": "El host remoto no puede contener espacios.",
   "invalid.duplicatePort": "Otro reenvío ya usa este puerto local.",
+
+  "import.title": "Importar de la configuración SSH",
+  "import.intro":
+    "Elige los servidores que quieras copiar en Server Ports. El archivo de configuración SSH solo se lee, nunca se modifica.",
+  "import.empty": "No se encontró ningún servidor en tu configuración SSH.",
+  "import.added": "Ya añadido",
+  "import.unsupported": "Aún no compatible: {kind}",
+  "import.noPorts": "puertos por elegir",
+  "import.selected": "Seleccionados: {n}",
+  "import.confirm": "Importar",
 
   "hostKey.title": "¿Confiar en este servidor?",
   "hostKey.body":
@@ -187,6 +202,7 @@ export const es: Catalog = {
   "error.bind.title": "No se pudo abrir el puerto",
   "error.storage.title": "No se pudo guardar",
   "error.keychain.title": "El llavero del sistema no está disponible",
+  "error.sshConfig.title": "No se pudo leer la configuración SSH",
   "error.notFound.title": "Este servidor ya no existe",
   "error.other.title": "Algo salió mal",
   "error.unknown.title": "Algo salió mal",

@@ -10,6 +10,7 @@ export const ja: Catalog = {
 
   "sidebar.new": "新規サーバー",
   "sidebar.settings": "設定",
+  "sidebar.import": "SSH 設定からインポート",
   "sidebar.servers": "サーバー",
   "sidebar.connect": "{name} に接続",
   "sidebar.disconnect": "{name} を切断",
@@ -55,6 +56,9 @@ export const ja: Catalog = {
   "empty.body":
     "サーバーを追加して必要なポートを選ぶと、このコンピューター上で使えるようになります。接続はバックグラウンドで維持され、切れても自動で再接続します。",
   "empty.cta": "最初のサーバーを追加",
+  "empty.found.one": "SSH 設定に {n} 台のサーバーが見つかりました",
+  "empty.found.other": "SSH 設定に {n} 台のサーバーが見つかりました",
+  "empty.import": "インポート…",
 
   "profile.new.title": "サーバーを追加",
   "profile.edit.title": "サーバーを編集",
@@ -84,6 +88,7 @@ export const ja: Catalog = {
   "profile.connectOnLaunch": "アプリの起動時に接続",
   "profile.restartNote": "接続設定を変更して保存すると、このサーバーに再接続します。",
   "profile.saveAndConnect": "保存して接続",
+  "profile.imported": "SSH 設定から取り込みました。転送するポートを追加して保存してください。",
 
   "form.listenOn": "待ち受け",
   "form.forwardTo": "転送先",
@@ -109,6 +114,16 @@ export const ja: Catalog = {
   "invalid.bindHost": "ローカルアドレスには IP アドレスを指定してください。",
   "invalid.remoteHost": "リモートホストに空白は使えません。",
   "invalid.duplicatePort": "このローカルポートは別の転送で使われています。",
+
+  "import.title": "SSH 設定からインポート",
+  "import.intro":
+    "Server Ports にコピーするサーバーを選んでください。SSH 設定ファイルは読み取るだけで、変更されません。",
+  "import.empty": "SSH 設定にサーバーが見つかりませんでした。",
+  "import.added": "追加済み",
+  "import.unsupported": "未対応: {kind}",
+  "import.noPorts": "ポートを選択",
+  "import.selected": "選択中: {n}",
+  "import.confirm": "インポート",
 
   "hostKey.title": "このサーバーを信頼しますか？",
   "hostKey.body":
@@ -185,6 +200,7 @@ export const ja: Catalog = {
   "error.bind.title": "ポートを開けませんでした",
   "error.storage.title": "保存できませんでした",
   "error.keychain.title": "システムのキーチェーンを利用できません",
+  "error.sshConfig.title": "SSH 設定を読み込めません",
   "error.notFound.title": "このサーバーはもう存在しません",
   "error.other.title": "問題が発生しました",
   "error.unknown.title": "問題が発生しました",

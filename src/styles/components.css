@@ -375,6 +375,16 @@
   white-space: nowrap;
 }
 
+.chip--muted {
+  background: var(--surface-3);
+  color: var(--text-2);
+}
+
+.chip--warn {
+  background: var(--warn-soft);
+  color: var(--text);
+}
+
 .notice {
   display: flex;
   align-items: center;
@@ -517,6 +527,10 @@
   margin: 0;
   font-size: 19px;
   letter-spacing: -0.015em;
+}
+
+.modal__notice {
+  margin: 6px 26px 0;
 }
 
 .modal__scroll {
@@ -675,6 +689,96 @@
   height: 32px;
   background: transparent;
   font-size: 13px;
+}
+
+/* ---- the servers of the SSH config, to pick from ---------------------------------------- */
+
+.import-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.import-none {
+  margin: 0;
+  padding: 18px 0 6px;
+  color: var(--text-2);
+  text-align: center;
+}
+
+.import-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.import-row:hover {
+  border-color: var(--border-strong);
+}
+
+.import-row.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.import-row.is-off {
+  cursor: default;
+}
+
+.import-row.is-off .import-row__text {
+  opacity: 0.7;
+}
+
+.import-row input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.import-row__text {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.import-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.import-row__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.import-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.import-row__meta code {
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.import-row__meta span {
+  overflow-wrap: anywhere;
 }
 
 /* ---- toasts ------------------------------------------------------------------------------ */
