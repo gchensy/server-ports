@@ -1,62 +1,131 @@
-//! Passwords and key passphrases in the operating system's credential store
-//! (Keychain on macOS, Credential Manager on Windows, Secret Service on Linux).
+//! Passwords and key passphrases the user chose to remember.
 //!
-//! The keyring calls are blocking, so they run on the blocking thread pool.
+//! [`SecretStore`] is the seam: the app uses the operating system's credential store
+//! ([`KeyringStore`]: Keychain on macOS, Credential Manager on Windows, Secret Service on Linux);
+//! tests use [`MemoryStore`], so they never touch the real keychain.
+
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 use crate::model::SecretKind;
 
 const SERVICE: &str = "com.chensy.server-ports";
 
-fn account(profile_id: &str, kind: SecretKind) -> String {
-    format!("{profile_id}:{}", kind.as_str())
+pub trait SecretStore: Send + Sync + 'static {
+    /// `Ok(None)` means "nothing stored"; `Err` means the store itself is unavailable.
+    fn load(&self, profile_id: &str, kind: SecretKind) -> Result<Option<String>, String>;
+    fn store(&self, profile_id: &str, kind: SecretKind, secret: &str) -> Result<(), String>;
+    /// Deleting something that is not there is not an error.
+    fn remove(&self, profile_id: &str, kind: SecretKind) -> Result<(), String>;
+
+    fn remove_all(&self, profile_id: &str) {
+        for kind in SecretKind::ALL {
+            let _ = self.remove(profile_id, kind);
+        }
+    }
 }
 
-async fn blocking<T: Send + 'static>(
-    job: impl FnOnce() -> Result<T, String> + Send + 'static,
+/// Runs a store call on the blocking thread pool: the OS credential APIs may block, for example
+/// while the keyring is waiting to be unlocked.
+pub async fn blocking<T: Send + 'static>(
+    store: &Arc<dyn SecretStore>,
+    job: impl FnOnce(&dyn SecretStore) -> Result<T, String> + Send + 'static,
 ) -> Result<T, String> {
-    tokio::task::spawn_blocking(job)
+    let store = store.clone();
+    tokio::task::spawn_blocking(move || job(&*store))
         .await
         .map_err(|e| e.to_string())?
 }
 
-fn entry(profile_id: &str, kind: SecretKind) -> Result<keyring::Entry, String> {
-    keyring::Entry::new(SERVICE, &account(profile_id, kind)).map_err(|e| e.to_string())
+fn account(profile_id: &str, kind: SecretKind) -> String {
+    format!("{profile_id}:{}", kind.as_str())
 }
 
-/// `Ok(None)` means "nothing stored"; `Err` means the credential store itself is unavailable.
-pub async fn load(profile_id: &str, kind: SecretKind) -> Result<Option<String>, String> {
-    let profile_id = profile_id.to_string();
-    blocking(move || match entry(&profile_id, kind)?.get_password() {
-        Ok(secret) => Ok(Some(secret)),
-        Err(keyring::Error::NoEntry) => Ok(None),
-        Err(e) => Err(e.to_string()),
-    })
-    .await
+pub struct KeyringStore;
+
+impl KeyringStore {
+    fn entry(profile_id: &str, kind: SecretKind) -> Result<keyring::Entry, String> {
+        keyring::Entry::new(SERVICE, &account(profile_id, kind)).map_err(|e| e.to_string())
+    }
 }
 
-pub async fn store(profile_id: &str, kind: SecretKind, secret: &str) -> Result<(), String> {
-    let profile_id = profile_id.to_string();
-    let secret = secret.to_string();
-    blocking(move || {
-        entry(&profile_id, kind)?
-            .set_password(&secret)
+impl SecretStore for KeyringStore {
+    fn load(&self, profile_id: &str, kind: SecretKind) -> Result<Option<String>, String> {
+        match Self::entry(profile_id, kind)?.get_password() {
+            Ok(secret) => Ok(Some(secret)),
+            Err(keyring::Error::NoEntry) => Ok(None),
+            Err(e) => Err(e.to_string()),
+        }
+    }
+
+    fn store(&self, profile_id: &str, kind: SecretKind, secret: &str) -> Result<(), String> {
+        Self::entry(profile_id, kind)?
+            .set_password(secret)
             .map_err(|e| e.to_string())
-    })
-    .await
+    }
+
+    fn remove(&self, profile_id: &str, kind: SecretKind) -> Result<(), String> {
+        match Self::entry(profile_id, kind)?.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+            Err(e) => Err(e.to_string()),
+        }
+    }
 }
 
-/// Deleting something that is not there is not an error.
-pub async fn remove(profile_id: &str, kind: SecretKind) -> Result<(), String> {
-    let profile_id = profile_id.to_string();
-    blocking(move || match entry(&profile_id, kind)?.delete_credential() {
-        Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
-        Err(e) => Err(e.to_string()),
-    })
-    .await
+/// Keeps secrets in memory only.
+#[derive(Default)]
+pub struct MemoryStore(Mutex<HashMap<String, String>>);
+
+impl SecretStore for MemoryStore {
+    fn load(&self, profile_id: &str, kind: SecretKind) -> Result<Option<String>, String> {
+        Ok(self
+            .0
+            .lock()
+            .unwrap()
+            .get(&account(profile_id, kind))
+            .cloned())
+    }
+
+    fn store(&self, profile_id: &str, kind: SecretKind, secret: &str) -> Result<(), String> {
+        self.0
+            .lock()
+            .unwrap()
+            .insert(account(profile_id, kind), secret.to_string());
+        Ok(())
+    }
+
+    fn remove(&self, profile_id: &str, kind: SecretKind) -> Result<(), String> {
+        self.0.lock().unwrap().remove(&account(profile_id, kind));
+        Ok(())
+    }
 }
 
-pub async fn remove_all(profile_id: &str) {
-    for kind in [SecretKind::Password, SecretKind::Passphrase] {
-        let _ = remove(profile_id, kind).await;
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn secrets_are_kept_per_profile_and_kind() {
+        let store = MemoryStore::default();
+        store.store("a", SecretKind::Password, "one").unwrap();
+        store.store("a", SecretKind::Passphrase, "two").unwrap();
+        assert_eq!(
+            store.load("a", SecretKind::Password).unwrap().as_deref(),
+            Some("one")
+        );
+        assert_eq!(store.load("b", SecretKind::Password).unwrap(), None);
+        store.remove_all("a");
+        assert_eq!(store.load("a", SecretKind::Password).unwrap(), None);
+        assert_eq!(store.load("a", SecretKind::Passphrase).unwrap(), None);
+    }
+
+    #[tokio::test]
+    async fn blocking_runs_the_job_against_the_store() {
+        let store: Arc<dyn SecretStore> = Arc::new(MemoryStore::default());
+        blocking(&store, |s| s.store("p", SecretKind::Password, "pw"))
+            .await
+            .unwrap();
+        let loaded = blocking(&store, |s| s.load("p", SecretKind::Password)).await;
+        assert_eq!(loaded.unwrap().as_deref(), Some("pw"));
     }
 }

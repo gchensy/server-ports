@@ -23,6 +23,7 @@ tauri-plugin-log = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["rt-multi-thread", "net", "io-util", "time", "sync", "macros"] }
+tokio-util = { version = "0.7", default-features = false }
 # `ring` instead of the default aws-lc-rs: it builds on all three OSes in CI without cmake/NASM.
 russh = { version = "0.65", default-features = false, features = ["flate2", "ring", "rsa"] }
 keyring = "4"
@@ -37,6 +38,15 @@ tauri-plugin-single-instance = "2"
 
 [dev-dependencies]
 tempfile = "3"
+# Only for an in-process ssh-agent in the engine tests; russh already depends on it.
+futures = "0.3"
+
+# Full debug info for ~450 dependencies makes `target/` several GB; line tables are enough for backtraces.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 # `panic` is left at the default (unwind) on purpose: a panicking tunnel task must not take the whole

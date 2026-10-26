@@ -40,6 +40,9 @@ pub enum TunnelError {
     /// An established session went away.
     #[error("{0}")]
     Closed(String),
+    /// A bug: the tunnel task panicked.
+    #[error("{0}")]
+    Internal(String),
 }
 
 impl TunnelError {
@@ -58,6 +61,7 @@ impl TunnelError {
             TunnelError::Negotiation(_) => "negotiation",
             TunnelError::Ssh(_) => "ssh",
             TunnelError::Closed(_) => "closed",
+            TunnelError::Internal(_) => "internal",
         }
     }
 
@@ -121,6 +125,7 @@ mod tests {
         assert!(!TunnelError::NoListeners("in use".into()).retryable());
         assert!(!TunnelError::Negotiation("none in common".into()).retryable());
         assert!(!TunnelError::Cancelled.retryable());
+        assert!(!TunnelError::Internal("panic".into()).retryable());
     }
 
     #[test]
