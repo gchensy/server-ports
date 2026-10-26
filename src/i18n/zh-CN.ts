@@ -1,6 +1,6 @@
-import type { MessageKey } from "./en";
+import type { Catalog } from "./en";
 
-export const zhCN: Record<MessageKey, string> = {
+export const zhCN: Catalog = {
   "app.name": "Server Ports",
 
   "common.cancel": "取消",
@@ -194,8 +194,8 @@ export const zhCN: Record<MessageKey, string> = {
   "tray.quit": "退出",
   "tray.tooltip": "Server Ports：已连接 {n} 个",
 
-  "unit.d": "天",
-  "unit.h": "时",
-  "unit.m": "分",
-  "unit.s": "秒",
+  "duration.d": "{n}天",
+  "duration.h": "{n}时",
+  "duration.m": "{n}分",
+  "duration.s": "{n}秒",
 };

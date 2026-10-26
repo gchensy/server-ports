@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { Language } from "../i18n";
 import type { Theme } from "../state/Appearance";
 import { useAppearance, useAppState, useI18n, useServices } from "../state/services";
+import { LanguagePicker } from "./LanguagePicker";
 import { Modal } from "./Modal";
 import { Button, IconButton, Segmented, ToggleRow } from "./ui";
 
@@ -45,15 +46,11 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         <div className="modal__scroll">
           <section className="form-section">
             <h3>{t("settings.language")}</h3>
-            <Segmented<Language>
+            <LanguagePicker
               label={t("settings.language")}
+              systemLabel={t("settings.language.system")}
               value={i18n.language}
               onChange={chooseLanguage}
-              options={[
-                { value: "system", label: t("settings.language.system") },
-                { value: "en", label: "English" },
-                { value: "zh-CN", label: "简体中文" },
-              ]}
             />
           </section>
           <section className="form-section">

@@ -1,4 +1,4 @@
-/** The source of all UI text. `zh-CN.ts` must have every key (the compiler checks). */
+/** The source of all UI text. Every other catalogue must have every key (the compiler checks). */
 export const en = {
   "app.name": "Server Ports",
 
@@ -202,10 +202,18 @@ export const en = {
   "tray.quit": "Quit",
   "tray.tooltip": "Server Ports: {n} connected",
 
-  "unit.d": "d",
-  "unit.h": "h",
-  "unit.m": "m",
-  "unit.s": "s",
+  "duration.d": "{n}d",
+  "duration.h": "{n}h",
+  "duration.m": "{n}m",
+  "duration.s": "{n}s",
 } as const;
 
 export type MessageKey = keyof typeof en;
+/** `x` for which both `x.one` and `x.other` exist. */
+export type PluralKey = Extract<MessageKey, `${string}.one`> extends `${infer K}.one` ? K : never;
+/**
+ * Every language has all the keys. A language with more plural forms than English adds them
+ * (Russian: `ports.few`, `ports.many`); a missing form falls back to `.other`.
+ */
+export type Catalog = Record<MessageKey, string> &
+  Partial<Record<`${PluralKey}.${"zero" | "two" | "few" | "many"}`, string>>;
