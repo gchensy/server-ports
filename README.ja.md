@@ -1,0 +1,65 @@
+<div align="center">
+
+# Server Ports
+
+**SSH 経由でリモートサーバーのポートをローカルマシンにマッピングします。**
+
+[English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | 日本語 | [한국어](README.ko.md) | [Español](README.es.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Русский](README.ru.md)
+
+</div>
+
+> **ステータス：開発初期段階。** 正式リリースはまだありません。この README はアプリの設計上の目標を説明したもので、一部はまだ開発中です。
+
+Server Ports は、SSH のポートフォワーディングを維持し続けてくれる小さなクロスプラットフォームのデスクトップアプリ（Windows、macOS、Linux）です。サーバーを選び、必要なポートを並べるだけで、それらが `localhost` に現れます。`ssh -L` と同じことを、ターミナルを開いてコマンドを打つ手間なしで行えます。
+
+## 機能
+
+- **サーバープロファイル**：SSH サーバーごとに 1 つのプロファイルを作成し、必要な数だけポートのマッピングを追加できます。
+- **3 種類のログイン方法**：パスワード、秘密鍵ファイル（パスフレーズは任意）、ssh-agent（OpenSSH agent または Pageant）。
+- **秘密情報は OS の資格情報ストアに保存**：パスワードと鍵のパスフレーズは macOS のキーチェーン、Windows の資格情報マネージャー、Linux の Secret Service に保存され、設定ファイルには書き込まれません。
+- **ホスト鍵の検証**：初めて見るサーバーの鍵はフィンガープリントとともに表示され、あなたが承認した場合にのみ信頼されます。鍵が変わった場合は警告されます。
+- **デフォルトは自分のマシンだけ**：フォワードしたポートは `127.0.0.1` で待ち受けるため、自分のマシンからしかアクセスできません。
+- **自動再接続**：切断された接続は自動的に再試行されます。アプリの起動と同時に接続するようプロファイルを設定することもできます。
+- **リアルタイムの状態表示**：サーバーごとの接続状態、マッピングごとの待ち受け状態、開いている接続数、トラフィックのカウンター。
+- **トレイに常駐**：ウィンドウを閉じてもアプリは終了せず、システムトレイに格納されます（オフにすることもできます）。
+- **軽量**：Tauri 2 製で、Rust のコアと OS 標準の WebView を使い、ブラウザは同梱しません。
+
+## 仕組み
+
+各マッピングは、手元のマシンのポートを、SSH サーバーから到達できるアドレスへ転送します。
+
+```text
+127.0.0.1:8080（手元のマシン）  ──暗号化された SSH──►  127.0.0.1:80（サーバー）
+```
+
+これは `ssh -L 127.0.0.1:8080:127.0.0.1:80 user@server` と同じです。転送先はサーバー側で解決されるため、`127.0.0.1` はサーバー自身を指します。サーバーから到達できる他のホストも指定できます。
+
+## 開発
+
+前提条件：
+
+- Node.js（現行の LTS）と npm
+- Rust 1.89 以降（[rustup](https://rustup.rs)）
+- お使いの OS 向けの Tauri のシステム依存パッケージ。[Tauri の前提条件](https://tauri.app/start/prerequisites/)を参照してください。Debian/Ubuntu の場合：
+
+```bash
+sudo apt update
+sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+```
+
+続いて：
+
+```bash
+npm install
+npm run tauri dev    # アプリを起動（ホットリロード対応）
+npm run tauri build  # インストーラーをビルド（出力先：src-tauri/target/release/bundle/）
+npm run typecheck    # フロントエンドの型チェック
+cargo test --manifest-path src-tauri/Cargo.toml  # Rust のテストを実行
+```
+
+## プロジェクト構成
+
+```text
+src/         React + TypeScript のユーザーインターフェース
+src-tauri/   Rust コア：SSH ポートフォワーディング、プロファイルの保存、OS の資格情報ストア、トレイ
+```
