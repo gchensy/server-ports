@@ -47,7 +47,7 @@ Equivale a `ssh -L 127.0.0.1:8080:127.0.0.1:80 user@server`. El destino se resue
 Requisitos previos:
 
 - Node.js (la LTS actual) y npm
-- Rust 1.89 o posterior ([rustup](https://rustup.rs))
+- Rust 1.90 o posterior ([rustup](https://rustup.rs))
 - Las dependencias del sistema de Tauri para tu sistema operativo; consulta los [requisitos previos de Tauri](https://tauri.app/start/prerequisites/). En Debian/Ubuntu:
 
 ```bash
