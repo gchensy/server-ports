@@ -1,51 +1,73 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { AnimatePresence, MotionConfig } from "motion/react";
+import { useEffect, useState } from "react";
+import type { ProfileId } from "./api/types";
+import { ConfirmDelete } from "./components/ConfirmDelete";
+import { Detail } from "./components/Detail";
+import { EmptyState } from "./components/EmptyState";
+import { HostKeyDialog } from "./components/HostKeyDialog";
+import { ProfileDialog } from "./components/ProfileDialog";
+import { SecretDialog } from "./components/SecretDialog";
+import { SettingsDialog } from "./components/SettingsDialog";
+import { Sidebar } from "./components/Sidebar";
+import { Toasts } from "./components/Toasts";
+import { Button } from "./components/ui";
+import { useAppState, useI18n, useServices } from "./state/services";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+type Dialog =
+  | { kind: "profile"; id: ProfileId | null }
+  | { kind: "settings" }
+  | { kind: "delete"; id: ProfileId };
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+export default function App() {
+  const { backend, store } = useServices();
+  const { t } = useI18n();
+  const loaded = useAppState((state) => state.loaded);
+  const loadError = useAppState((state) => state.loadError);
+  const empty = useAppState((state) => state.profiles.length === 0);
+  const prompt = useAppState((state) => state.prompts[0]);
+  const [dialog, setDialog] = useState<Dialog | null>(null);
+  const close = () => setDialog(null);
+
+  // The window is created hidden; it may appear once there is something to look at. A hidden
+  // page paints no frames, so waiting for one would wait forever.
+  useEffect(() => {
+    if (loaded) void backend.uiReady();
+  }, [loaded, backend]);
+
+  if (loadError) {
+    return (
+      <div className="fatal" role="alert">
+        <h1>{t("error.other.title")}</h1>
+        <code>{loadError}</code>
+        <Button onClick={() => void store.start()}>↻</Button>
+      </div>
+    );
   }
+  if (!loaded) return null;
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <MotionConfig reducedMotion="user">
+      <div className="app">
+        <Sidebar onNew={() => setDialog({ kind: "profile", id: null })} onSettings={() => setDialog({ kind: "settings" })} />
+        <main className="main">
+          {empty ? (
+            <EmptyState onAdd={() => setDialog({ kind: "profile", id: null })} />
+          ) : (
+            <Detail
+              onEdit={(id) => setDialog({ kind: "profile", id })}
+              onDelete={(id) => setDialog({ kind: "delete", id })}
+            />
+          )}
+        </main>
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+      <AnimatePresence>
+        {dialog?.kind === "profile" && <ProfileDialog key="profile" profileId={dialog.id} onClose={close} />}
+        {dialog?.kind === "settings" && <SettingsDialog key="settings" onClose={close} />}
+        {dialog?.kind === "delete" && <ConfirmDelete key="delete" profileId={dialog.id} onClose={close} />}
+        {prompt?.type === "hostKey" && <HostKeyDialog key={prompt.requestId} prompt={prompt} />}
+        {prompt?.type === "secret" && <SecretDialog key={prompt.requestId} prompt={prompt} />}
+      </AnimatePresence>
+      <Toasts />
+    </MotionConfig>
   );
 }
-
-export default App;
