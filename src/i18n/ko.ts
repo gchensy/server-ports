@@ -10,7 +10,6 @@ export const ko: Catalog = {
 
   "sidebar.new": "새 서버",
   "sidebar.settings": "설정",
-  "sidebar.import": "SSH 설정에서 가져오기",
   "sidebar.servers": "서버",
   "sidebar.connect": "{name} 연결",
   "sidebar.disconnect": "{name} 연결 끊기",
@@ -39,9 +38,9 @@ export const ko: Catalog = {
   "detail.auth.password": "비밀번호",
   "detail.auth.key": "키 {path}",
   "detail.auth.agent": "SSH 에이전트",
-  "detail.autoReconnect": "자동으로 다시 연결",
 
   "forward.copy": "주소 복사",
+  "forward.openLink": "브라우저에서 열기",
   "forward.pending": "대기 중",
   "forward.listening": "수신 대기 중",
   "forward.failed": "사용할 수 없음",
@@ -61,6 +60,8 @@ export const ko: Catalog = {
   "empty.import": "가져오기…",
 
   "profile.new.title": "새 서버",
+  "profile.source.manual": "직접 입력",
+  "profile.source.ssh": "SSH 설정에서",
   "profile.edit.title": "서버 편집",
   "profile.section.server": "서버",
   "profile.section.auth": "로그인",

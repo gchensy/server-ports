@@ -18,10 +18,20 @@ export function formatRate(bytesPerSecond: number): string {
   return `${formatBytes(bytesPerSecond)}/s`;
 }
 
+/** Where on this computer the port can be reached: a wildcard bind is reached through loopback. */
+function localHost(forward: Pick<Forward, "bindHost">): string {
+  return forward.bindHost === "0.0.0.0" || forward.bindHost === "::" ? "127.0.0.1" : forward.bindHost;
+}
+
 /** The address to type into a client. An explicit IP: "localhost" may resolve to ::1 first. */
 export function localAddress(forward: Pick<Forward, "bindHost" | "localPort">): string {
-  const host = forward.bindHost === "0.0.0.0" || forward.bindHost === "::" ? "127.0.0.1" : forward.bindHost;
-  return `${host}:${forward.localPort}`;
+  return `${localHost(forward)}:${forward.localPort}`;
+}
+
+/** The same as a web link, for the browser: `http://127.0.0.1:8800`. */
+export function localUrl(forward: Pick<Forward, "bindHost" | "localPort">): string {
+  const host = localHost(forward);
+  return `http://${host.includes(":") ? `[${host}]` : host}:${forward.localPort}`;
 }
 
 export function remoteAddress(forward: Pick<Forward, "remoteHost" | "remotePort">): string {

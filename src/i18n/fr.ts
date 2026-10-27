@@ -11,7 +11,6 @@ export const fr: Catalog = {
 
   "sidebar.new": "Nouveau serveur",
   "sidebar.settings": "Paramètres",
-  "sidebar.import": "Importer la config SSH",
   "sidebar.servers": "Serveurs",
   "sidebar.connect": "Connecter {name}",
   "sidebar.disconnect": "Déconnecter {name}",
@@ -40,9 +39,9 @@ export const fr: Catalog = {
   "detail.auth.password": "mot de passe",
   "detail.auth.key": "clé {path}",
   "detail.auth.agent": "agent SSH",
-  "detail.autoReconnect": "se reconnecte automatiquement",
 
   "forward.copy": "Copier l’adresse",
+  "forward.openLink": "Ouvrir dans le navigateur",
   "forward.pending": "En attente",
   "forward.listening": "À l’écoute",
   "forward.failed": "Indisponible",
@@ -62,6 +61,8 @@ export const fr: Catalog = {
   "empty.import": "Importer…",
 
   "profile.new.title": "Nouveau serveur",
+  "profile.source.manual": "Saisie manuelle",
+  "profile.source.ssh": "Depuis la config SSH",
   "profile.edit.title": "Modifier le serveur",
   "profile.section.server": "Serveur",
   "profile.section.auth": "Connexion",

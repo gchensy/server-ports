@@ -10,7 +10,6 @@ export const ja: Catalog = {
 
   "sidebar.new": "新規サーバー",
   "sidebar.settings": "設定",
-  "sidebar.import": "SSH 設定からインポート",
   "sidebar.servers": "サーバー",
   "sidebar.connect": "{name} に接続",
   "sidebar.disconnect": "{name} を切断",
@@ -39,9 +38,9 @@ export const ja: Catalog = {
   "detail.auth.password": "パスワード",
   "detail.auth.key": "鍵 {path}",
   "detail.auth.agent": "SSH エージェント",
-  "detail.autoReconnect": "自動で再接続",
 
   "forward.copy": "アドレスをコピー",
+  "forward.openLink": "ブラウザで開く",
   "forward.pending": "待機中",
   "forward.listening": "待ち受け中",
   "forward.failed": "利用不可",
@@ -61,6 +60,8 @@ export const ja: Catalog = {
   "empty.import": "インポート…",
 
   "profile.new.title": "サーバーを追加",
+  "profile.source.manual": "手動で入力",
+  "profile.source.ssh": "SSH 設定から",
   "profile.edit.title": "サーバーを編集",
   "profile.section.server": "サーバー",
   "profile.section.auth": "サインイン",

@@ -15,7 +15,7 @@ Server Ports 是一款小巧的跨平台桌面应用（Windows、macOS、Linux�
 ## 功能
 
 - **服务器配置**：每台 SSH 服务器一份配置，可以添加任意多条端口映射。
-- **从 SSH 配置导入**：在侧边栏或起始页中，从 `~/.ssh/config` 里挑选服务器，一次性复制到 Server Ports。主机名、用户、端口、密钥文件（`IdentityFile`）和端口转发（`LocalForward`）都会一并带入，包括从 `Host *` 块和 `Include` 文件继承来的设置。这只是一次性的复制：SSH 配置文件只会被读取，不会被修改。
+- **从 SSH 配置导入**：在“新建服务器”对话框或起始页中，从 `~/.ssh/config` 里挑选服务器，一次性复制到 Server Ports。主机名、用户、端口、密钥文件（`IdentityFile`）和端口转发（`LocalForward`）都会一并带入，包括从 `Host *` 块和 `Include` 文件继承来的设置。这只是一次性的复制：SSH 配置文件只会被读取，不会被修改。
 - **三种登录方式**：密码、私钥文件（可带口令），或 ssh-agent（OpenSSH agent 或 Pageant）。
 - **敏感信息不写进配置文件**：只有在你选择“记住”时，密码和私钥口令才会保存到 macOS 钥匙串、Windows 凭据管理器或 Linux Secret Service；否则它们只在服务器连接期间保存在内存中。
 - **主机密钥校验**：第一次见到的服务器密钥会连同指纹一起显示，只有你确认后才会信任；密钥发生变化时会被标记出来。

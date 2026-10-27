@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { homeDir, join } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
+import { openUrl as openInBrowser } from "@tauri-apps/plugin-opener";
 import type { Backend } from "./backend";
 import { toCommandError } from "./errors";
 import type {
@@ -57,6 +58,14 @@ export class TauriBackend implements Backend {
     if (typeof picked !== "string") return null;
     // `~` keeps the profile valid if the home directory moves, and reads better.
     return home && picked.startsWith(home) ? `~${picked.slice(home.length)}` : picked;
+  }
+
+  async openUrl(url: string): Promise<void> {
+    try {
+      await openInBrowser(url);
+    } catch (raw) {
+      throw toCommandError(raw);
+    }
   }
 
   uiReady = () => this.call<void>("ui_ready");

@@ -1,7 +1,6 @@
 import { FileTerminal, Plus } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
-import { useI18n, useServices } from "../state/services";
+import { useI18n, useSshHosts } from "../state/services";
 import { gentle } from "./motion";
 import { Button } from "./ui";
 
@@ -9,22 +8,8 @@ import { Button } from "./ui";
 export function EmptyState({ onAdd, onImport }: { onAdd: () => void; onImport: () => void }) {
   const i18n = useI18n();
   const { t } = i18n;
-  const { backend } = useServices();
-  const [found, setFound] = useState(0);
-
   // A quiet look at the SSH config: it is only worth a word if it holds servers.
-  useEffect(() => {
-    let live = true;
-    backend.discoverSshHosts().then(
-      (hosts) => {
-        if (live) setFound(hosts.length);
-      },
-      () => undefined,
-    );
-    return () => {
-      live = false;
-    };
-  }, [backend]);
+  const found = useSshHosts()?.length ?? 0;
 
   return (
     <motion.div
@@ -48,13 +33,14 @@ export function EmptyState({ onAdd, onImport }: { onAdd: () => void; onImport: (
             </g>
           ))}
         </g>
-        <path id="art-route" d="M118 62 C168 62 196 70 246 70" className="art-route" />
-        {[0, 0.8, 1.6].map((delay) => (
-          <circle key={delay} r="4" className="art-packet">
-            <animateMotion dur="2.4s" begin={`${delay}s`} repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
-              <mpath href="#art-route" />
-            </animateMotion>
-          </circle>
+        <path d="M118 62 C168 62 196 70 246 70" className="art-route" />
+        {/* On the route, standing still: a picture that moves for good keeps the window repainting. */}
+        {[
+          [152, 63],
+          [182, 66],
+          [212, 69],
+        ].map(([x, y]) => (
+          <circle key={x} cx={x} cy={y} r="4" className="art-packet" />
         ))}
       </svg>
       <h1>{t("empty.title")}</h1>

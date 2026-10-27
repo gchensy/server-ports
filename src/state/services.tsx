@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Backend } from "../api/backend";
-import type { ProfileId } from "../api/types";
+import type { DiscoveredHost, ProfileId } from "../api/types";
 import { I18n } from "../i18n";
 import { Appearance } from "./Appearance";
 import { AppStore, type AppState } from "./AppStore";
@@ -66,4 +66,24 @@ export function useSamples(forwardId: string): readonly Sample[] {
 
 export function useProfile(id: ProfileId | null) {
   return useAppState((state) => state.profiles.find((p) => p.id === id));
+}
+
+/** The servers of the user's SSH config: null until they are read, or if they cannot be. */
+export function useSshHosts(enabled = true): DiscoveredHost[] | null {
+  const { backend } = useServices();
+  const [hosts, setHosts] = useState<DiscoveredHost[] | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    let live = true;
+    backend.discoverSshHosts().then(
+      (found) => {
+        if (live) setHosts(found);
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [backend, enabled]);
+  return hosts;
 }

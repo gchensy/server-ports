@@ -297,6 +297,11 @@ export class AppStore {
     if (!saved) this.update(() => ({ settings: previous }));
   }
 
+  /** Opens a link in the default browser. */
+  async openLink(url: string): Promise<void> {
+    await this.attempt(() => this.backend.openUrl(url));
+  }
+
   /** The tray menu is made by the core, from words the UI hands over. */
   async sendTrayLabels(): Promise<void> {
     await this.attempt(() => this.backend.setTrayLabels(this.i18n.trayLabels()));
