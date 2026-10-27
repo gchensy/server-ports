@@ -15,7 +15,7 @@ Server Ports is a small cross-platform desktop app (Windows, macOS, Linux) that 
 ## Features
 
 - **Server profiles**: one profile per SSH server, with as many port mappings as you need.
-- **Import from your SSH config**: pick servers from `~/.ssh/config` and copy them into Server Ports in one go, from the sidebar or from the start screen. Host name, user, port, key file (`IdentityFile`) and port forwards (`LocalForward`) come along, including settings inherited from `Host *` blocks and `Include`d files. It is a one-time copy: your SSH config is only read, never changed.
+- **Import from your SSH config**: pick servers from `~/.ssh/config` and copy them into Server Ports in one go, in the New server dialog or from the start screen. Host name, user, port, key file (`IdentityFile`) and port forwards (`LocalForward`) come along, including settings inherited from `Host *` blocks and `Include`d files. It is a one-time copy: your SSH config is only read, never changed.
 - **Three ways to sign in**: password, private key file (with an optional passphrase), or ssh-agent (OpenSSH agent or Pageant).
 - **Secrets stay out of the config file**: if you ask for it, passwords and key passphrases are kept in the macOS Keychain, Windows Credential Manager or the Linux Secret Service; otherwise they are only held in memory while a server is connected.
 - **Host key verification**: a server key you have not seen before is shown with its fingerprint and trusted only if you say so; a key that has changed is flagged.

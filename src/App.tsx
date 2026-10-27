@@ -5,7 +5,6 @@ import { ConfirmDelete } from "./components/ConfirmDelete";
 import { Detail } from "./components/Detail";
 import { EmptyState } from "./components/EmptyState";
 import { HostKeyDialog } from "./components/HostKeyDialog";
-import { ImportDialog } from "./components/ImportDialog";
 import { ProfileDialog } from "./components/ProfileDialog";
 import { SecretDialog } from "./components/SecretDialog";
 import { SettingsDialog } from "./components/SettingsDialog";
@@ -15,8 +14,8 @@ import { Button } from "./components/ui";
 import { useAppState, useI18n, useServices } from "./state/services";
 
 type Dialog =
-  | { kind: "profile"; id: ProfileId | null }
-  | { kind: "import" }
+  /** `from`: a new server that starts out on the list of the SSH config instead of the form. */
+  | { kind: "profile"; id: ProfileId | null; from?: "ssh" }
   | { kind: "settings" }
   | { kind: "delete"; id: ProfileId };
 
@@ -53,16 +52,12 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="app">
-        <Sidebar
-          onNew={() => setDialog({ kind: "profile", id: null })}
-          onImport={() => setDialog({ kind: "import" })}
-          onSettings={() => setDialog({ kind: "settings" })}
-        />
+        <Sidebar onNew={() => setDialog({ kind: "profile", id: null })} onSettings={() => setDialog({ kind: "settings" })} />
         <main className="main">
           {empty ? (
             <EmptyState
               onAdd={() => setDialog({ kind: "profile", id: null })}
-              onImport={() => setDialog({ kind: "import" })}
+              onImport={() => setDialog({ kind: "profile", id: null, from: "ssh" })}
             />
           ) : (
             <Detail
@@ -73,23 +68,24 @@ export default function App() {
         </main>
       </div>
       <AnimatePresence>
-        {dialog?.kind === "profile" && <ProfileDialog key="profile" profileId={dialog.id} onClose={close} />}
+        {dialog?.kind === "profile" && (
+          <ProfileDialog
+            key="profile"
+            profileId={dialog.id}
+            from={dialog.from}
+            onClose={close}
+            onFinishImport={(rest) => {
+              setUnsaved(rest);
+              close();
+            }}
+          />
+        )}
         {imported && (
           <ProfileDialog
             key={`imported-${imported.name}`}
             profileId={null}
             imported={imported}
             onClose={() => setUnsaved((rest) => rest.slice(1))}
-          />
-        )}
-        {dialog?.kind === "import" && (
-          <ImportDialog
-            key="import"
-            onClose={close}
-            onFinish={(rest) => {
-              setUnsaved(rest);
-              close();
-            }}
           />
         )}
         {dialog?.kind === "settings" && <SettingsDialog key="settings" onClose={close} />}

@@ -10,7 +10,6 @@ export const zhCN: Catalog = {
 
   "sidebar.new": "新建服务器",
   "sidebar.settings": "设置",
-  "sidebar.import": "从 SSH 配置导入",
   "sidebar.servers": "服务器",
   "sidebar.connect": "连接 {name}",
   "sidebar.disconnect": "断开 {name}",
@@ -39,9 +38,9 @@ export const zhCN: Catalog = {
   "detail.auth.password": "密码",
   "detail.auth.key": "密钥 {path}",
   "detail.auth.agent": "SSH 代理",
-  "detail.autoReconnect": "自动重连",
 
   "forward.copy": "复制地址",
+  "forward.openLink": "在浏览器中打开",
   "forward.pending": "等待中",
   "forward.listening": "监听中",
   "forward.failed": "不可用",
@@ -60,6 +59,8 @@ export const zhCN: Catalog = {
   "empty.import": "导入…",
 
   "profile.new.title": "新建服务器",
+  "profile.source.manual": "手动填写",
+  "profile.source.ssh": "从 SSH 配置",
   "profile.edit.title": "编辑服务器",
   "profile.section.server": "服务器",
   "profile.section.auth": "登录方式",

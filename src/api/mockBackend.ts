@@ -313,6 +313,10 @@ export class MockBackend implements Backend {
     return "~/.ssh/id_rsa";
   }
 
+  async openUrl(url: string): Promise<void> {
+    window.open(url, "_blank", "noopener");
+  }
+
   async uiReady(): Promise<void> {}
   async quit(): Promise<void> {}
 

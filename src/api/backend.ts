@@ -38,6 +38,8 @@ export interface Backend {
 
   /** Asks for a private key file; `null` if the user backs out. */
   pickKeyFile(): Promise<string | null>;
+  /** Opens a web link in the default browser. Only addresses of this computer are allowed. */
+  openUrl(url: string): Promise<void>;
   /** The first frame is painted: the window may appear. */
   uiReady(): Promise<void>;
   quit(): Promise<void>;

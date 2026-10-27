@@ -5,7 +5,7 @@ use std::sync::Arc;
 use tauri::{AppHandle, State};
 use tauri_plugin_autostart::ManagerExt;
 
-use crate::app::Launch;
+use crate::app::MainWindow;
 use crate::backend::{Backend, BackendError, DiscoveredHost, Snapshot};
 use crate::interaction::SecretReply;
 use crate::model::{Profile, SecretKind, Settings};
@@ -119,8 +119,8 @@ pub fn set_tray_labels(tray: State<'_, Arc<Tray>>, labels: Labels) {
 
 /// The UI has painted its first frame: time to show the window.
 #[tauri::command]
-pub fn ui_ready(app: AppHandle, launch: State<'_, Launch>) {
-    launch.reveal(&app);
+pub fn ui_ready(app: AppHandle, window: State<'_, MainWindow>) {
+    window.ready(&app);
 }
 
 #[tauri::command]

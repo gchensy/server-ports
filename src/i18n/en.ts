@@ -9,7 +9,6 @@ export const en = {
 
   "sidebar.new": "New server",
   "sidebar.settings": "Settings",
-  "sidebar.import": "Import from SSH config",
   "sidebar.servers": "Servers",
   "sidebar.connect": "Connect {name}",
   "sidebar.disconnect": "Disconnect {name}",
@@ -38,9 +37,9 @@ export const en = {
   "detail.auth.password": "password",
   "detail.auth.key": "key {path}",
   "detail.auth.agent": "SSH agent",
-  "detail.autoReconnect": "reconnects automatically",
 
   "forward.copy": "Copy address",
+  "forward.openLink": "Open in browser",
   "forward.pending": "Waiting",
   "forward.listening": "Listening",
   "forward.failed": "Unavailable",
@@ -60,6 +59,8 @@ export const en = {
   "empty.import": "Import…",
 
   "profile.new.title": "New server",
+  "profile.source.manual": "Enter manually",
+  "profile.source.ssh": "From SSH config",
   "profile.edit.title": "Edit server",
   "profile.section.server": "Server",
   "profile.section.auth": "Sign-in",

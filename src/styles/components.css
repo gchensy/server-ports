@@ -159,10 +159,6 @@
   background: var(--warn);
 }
 
-.switch.is-busy .switch__knob {
-  animation: pulse-knob 1s ease-in-out infinite;
-}
-
 .segmented {
   display: inline-flex;
   gap: 2px;
@@ -453,20 +449,16 @@
 
 .dot--connected {
   background: var(--ok);
-}
-
-.dot--connected::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: var(--ok);
-  animation: ripple 2.2s ease-out infinite;
+  box-shadow: 0 0 0 3px var(--ok-soft);
 }
 
 .dot--connecting,
 .dot--reconnecting {
   background: var(--warn);
+}
+
+/* Only the wait for an answer blinks; a server that sits out its back-off holds still. */
+.dot--connecting {
   animation: blink 1s ease-in-out infinite;
 }
 
@@ -517,9 +509,16 @@
 
 .modal__head--row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 10px 16px;
   padding-right: 18px;
+}
+
+/* A row that ends in a control as wide as the content below it, not in an icon button. */
+.modal__head--switch {
+  padding-right: 26px;
 }
 
 .modal__head h2,
@@ -809,25 +808,8 @@
 
 /* ---- keyframes --------------------------------------------------------------------------- */
 
-@keyframes ripple {
-  from {
-    opacity: 0.55;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(2.8);
-  }
-}
-
 @keyframes blink {
   50% {
     opacity: 0.35;
-  }
-}
-
-@keyframes pulse-knob {
-  50% {
-    transform: scale(0.8);
   }
 }

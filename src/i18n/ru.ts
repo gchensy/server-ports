@@ -10,7 +10,6 @@ export const ru: Catalog = {
 
   "sidebar.new": "Новый сервер",
   "sidebar.settings": "Настройки",
-  "sidebar.import": "Импорт из SSH-конфига",
   "sidebar.servers": "Серверы",
   "sidebar.connect": "Подключить {name}",
   "sidebar.disconnect": "Отключить {name}",
@@ -41,9 +40,9 @@ export const ru: Catalog = {
   "detail.auth.password": "пароль",
   "detail.auth.key": "ключ {path}",
   "detail.auth.agent": "агент SSH",
-  "detail.autoReconnect": "переподключается автоматически",
 
   "forward.copy": "Копировать адрес",
+  "forward.openLink": "Открыть в браузере",
   "forward.pending": "Ожидание",
   "forward.listening": "Слушает",
   "forward.failed": "Недоступен",
@@ -65,6 +64,8 @@ export const ru: Catalog = {
   "empty.import": "Импорт…",
 
   "profile.new.title": "Новый сервер",
+  "profile.source.manual": "Вручную",
+  "profile.source.ssh": "Из SSH-конфига",
   "profile.edit.title": "Изменение сервера",
   "profile.section.server": "Сервер",
   "profile.section.auth": "Вход",

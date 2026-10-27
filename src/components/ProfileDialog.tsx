@@ -1,12 +1,13 @@
 import { motion, useAnimationControls } from "motion/react";
-import { FolderOpen, KeyRound, Lock, Plus, Trash, Bot } from "lucide-react";
+import { FolderOpen, KeyRound, Lock, Plus, Trash, Bot, FileTerminal, Keyboard } from "lucide-react";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { toCommandError } from "../api/errors";
 import type { Auth, Forward, Profile, ProfileId, SecretKind } from "../api/types";
 import type { MessageKey } from "../i18n";
 import { isActive } from "../state/AppStore";
-import { useAppState, useI18n, useServices, useStore } from "../state/services";
+import { useAppState, useI18n, useServices, useSshHosts, useStore } from "../state/services";
 import { cx } from "../util/cx";
+import { ImportList } from "./ImportList";
 import { Modal } from "./Modal";
 import { Button, Field, IconButton, Segmented, ToggleRow } from "./ui";
 
@@ -16,6 +17,9 @@ interface Problem {
   field: string;
   forwardIndex: number | null;
 }
+
+/** Where a new server comes from: typed into the form, or picked from the SSH config. */
+type Source = "form" | "ssh";
 
 function blankForward(): Forward {
   return { id: "", label: "", bindHost: LOOPBACK, localPort: 0, remoteHost: LOOPBACK, remotePort: 0 };
@@ -74,16 +78,22 @@ function reconnects(before: Profile, after: Profile): boolean {
 
 /**
  * The form for a server: new, or the one with `profileId`. `imported` (a server found in the SSH
- * config that still needs its ports) opens it as a new server with the fields filled in.
+ * config that still needs its ports) opens it as a new server with the fields filled in. A new
+ * server can also be picked from the SSH config, on the list the form switches to (`from` starts
+ * there); `onFinishImport` gets the picked servers that are not saved yet, to complete in the form.
  */
 export function ProfileDialog({
   profileId,
   imported,
+  from = "form",
   onClose,
+  onFinishImport,
 }: {
   profileId: ProfileId | null;
   imported?: Profile;
+  from?: Source;
   onClose: () => void;
+  onFinishImport?: (unsaved: Profile[]) => void;
 }) {
   const i18n = useI18n();
   const { t } = i18n;
@@ -91,12 +101,18 @@ export function ProfileDialog({
   const { backend } = useServices();
   const original = useAppState((state) => state.profiles.find((p) => p.id === profileId));
   const running = useAppState((state) => isActive(profileId ? state.runtimes[profileId] : undefined));
+  const creating = !original && !imported;
+  const hosts = useSshHosts(creating);
 
   const [draft, setDraft] = useState<Profile>(() => startingPoint(original ?? imported));
   const [problem, setProblem] = useState<Problem | null>(null);
   const [advanced, setAdvanced] = useState(() => draft.forwards.some((f) => f.bindHost !== LOOPBACK));
   const [saved, setSaved] = useState<SecretKind[]>([]);
   const [busy, setBusy] = useState(false);
+  const [source, setSource] = useState<Source>(from);
+  // The SSH config is offered once it is known to list servers, or when the list was asked for.
+  const fromSsh = creating && source === "ssh" && hosts?.length !== 0;
+  const offerSsh = fromSsh || (creating && (hosts?.length ?? 0) > 0);
   const form = useRef<HTMLFormElement>(null);
   const shake = useAnimationControls();
   const nameId = useId();
@@ -181,264 +197,280 @@ export function ProfileDialog({
 
   return (
     <Modal title={title} onClose={onClose} wide>
-      <motion.form
-        ref={form}
-        className="modal__form"
-        animate={shake}
-        noValidate
-        onSubmit={(event: FormEvent) => {
-          event.preventDefault();
-          void submit(false);
-        }}
-      >
-        <header className="modal__head">
+      <motion.div className="modal__form" animate={shake}>
+        <header className={cx("modal__head", offerSsh && "modal__head--row modal__head--switch")}>
           <h2>{title}</h2>
-        </header>
-
-        {imported && <p className="notice modal__notice">{t("profile.imported")}</p>}
-
-        <div className="modal__scroll">
-          <section className="form-section">
-            <h3>{t("profile.section.server")}</h3>
-            <Field label={t("profile.name")} hint={t("profile.name.hint")} htmlFor={nameId}>
-              <input
-                id={nameId}
-                className="input"
-                value={draft.name}
-                onChange={(e) => change({ name: e.target.value })}
-                data-field="name"
-                autoComplete="off"
-              />
-            </Field>
-            <div className="form-row form-row--host">
-              <Field label={t("profile.host")} error={message("host")} htmlFor={hostId}>
-                <input
-                  id={hostId}
-                  className="input"
-                  value={draft.host}
-                  placeholder={t("profile.host.placeholder")}
-                  onChange={(e) => change({ host: e.target.value })}
-                  aria-invalid={message("host") !== null}
-                  data-field="host"
-                  data-autofocus={original || imported ? undefined : ""}
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              </Field>
-              <Field label={t("profile.port")} error={message("port")} htmlFor={portId}>
-                <input
-                  id={portId}
-                  className="input input--mono"
-                  inputMode="numeric"
-                  value={showPort(draft.port)}
-                  onChange={(e) => change({ port: readPort(e.target.value) })}
-                  aria-invalid={message("port") !== null}
-                  data-field="port"
-                />
-              </Field>
-            </div>
-            <Field label={t("profile.username")} error={message("username")} htmlFor={userId}>
-              <input
-                id={userId}
-                className="input"
-                value={draft.username}
-                onChange={(e) => change({ username: e.target.value })}
-                aria-invalid={message("username") !== null}
-                data-field="username"
-                autoComplete="off"
-                spellCheck={false}
-              />
-            </Field>
-          </section>
-
-          <section className="form-section">
-            <h3>{t("profile.section.auth")}</h3>
-            <Segmented<Auth["type"]>
-              label={t("profile.section.auth")}
-              value={draft.auth.type}
-              onChange={setAuth}
+          {offerSsh && (
+            <Segmented<Source>
+              label={title}
+              value={fromSsh ? "ssh" : "form"}
+              onChange={setSource}
               options={[
-                { value: "password", label: t("profile.auth.password"), icon: <Lock size={14} /> },
-                { value: "key", label: t("profile.auth.key"), icon: <KeyRound size={14} /> },
-                { value: "agent", label: t("profile.auth.agent"), icon: <Bot size={14} /> },
+                { value: "form", label: t("profile.source.manual"), icon: <Keyboard size={14} /> },
+                { value: "ssh", label: t("profile.source.ssh"), icon: <FileTerminal size={14} /> },
               ]}
             />
-            <p className="form-note">{t(`profile.auth.${draft.auth.type}.hint` as MessageKey)}</p>
-            {draft.auth.type === "key" && (
-              <Field label={t("profile.keyPath")} error={message("keyPath")} htmlFor={keyId}>
-                <div className="input-group">
+          )}
+        </header>
+
+        {fromSsh ? (
+          <ImportList hosts={hosts} onClose={onClose} onFinish={(unsaved) => onFinishImport?.(unsaved)} />
+        ) : (
+          <form
+            ref={form}
+            className="modal__form"
+            noValidate
+            onSubmit={(event: FormEvent) => {
+              event.preventDefault();
+              void submit(false);
+            }}
+          >
+            {imported && <p className="notice modal__notice">{t("profile.imported")}</p>}
+
+            <div className="modal__scroll">
+              <section className="form-section">
+                <h3>{t("profile.section.server")}</h3>
+                <Field label={t("profile.name")} hint={t("profile.name.hint")} htmlFor={nameId}>
                   <input
-                    id={keyId}
-                    className="input input--mono"
-                    value={draft.auth.path}
-                    placeholder={t("profile.keyPath.placeholder")}
-                    onChange={(e) => change({ auth: { type: "key", path: e.target.value } })}
-                    aria-invalid={message("keyPath") !== null}
-                    data-field="keyPath"
+                    id={nameId}
+                    className="input"
+                    value={draft.name}
+                    onChange={(e) => change({ name: e.target.value })}
+                    data-field="name"
+                    autoComplete="off"
+                  />
+                </Field>
+                <div className="form-row form-row--host">
+                  <Field label={t("profile.host")} error={message("host")} htmlFor={hostId}>
+                    <input
+                      id={hostId}
+                      className="input"
+                      value={draft.host}
+                      placeholder={t("profile.host.placeholder")}
+                      onChange={(e) => change({ host: e.target.value })}
+                      aria-invalid={message("host") !== null}
+                      data-field="host"
+                      data-autofocus={original || imported ? undefined : ""}
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                  </Field>
+                  <Field label={t("profile.port")} error={message("port")} htmlFor={portId}>
+                    <input
+                      id={portId}
+                      className="input input--mono"
+                      inputMode="numeric"
+                      value={showPort(draft.port)}
+                      onChange={(e) => change({ port: readPort(e.target.value) })}
+                      aria-invalid={message("port") !== null}
+                      data-field="port"
+                    />
+                  </Field>
+                </div>
+                <Field label={t("profile.username")} error={message("username")} htmlFor={userId}>
+                  <input
+                    id={userId}
+                    className="input"
+                    value={draft.username}
+                    onChange={(e) => change({ username: e.target.value })}
+                    aria-invalid={message("username") !== null}
+                    data-field="username"
                     autoComplete="off"
                     spellCheck={false}
                   />
-                  <Button icon={<FolderOpen size={15} />} onClick={() => void browse()}>
-                    {t("profile.keyPath.browse")}
-                  </Button>
-                </div>
-              </Field>
-            )}
-            {hasSavedSecret && profileId && secretKind && (
-              <div className="notice">
-                <span>{t(`profile.saved.${secretKind}` as MessageKey)}</span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => void store.forgetSecrets(profileId).then(() => setSaved([]))}
-                >
-                  {t("common.forget")}
-                </Button>
-              </div>
-            )}
-          </section>
+                </Field>
+              </section>
 
-          <section className="form-section">
-            <div className="form-section__head">
-              <h3>{t("profile.section.ports")}</h3>
-              <button type="button" className="link" aria-expanded={advanced} onClick={() => setAdvanced((a) => !a)}>
-                {t("form.advanced")}
-              </button>
-            </div>
-            {message("forwards") && (
-              <p className="field__error" role="alert">
-                {message("forwards")}
-              </p>
-            )}
-            <div className="mapping-form">
-              <div className={cx("mapping-form__titles", advanced && "is-advanced")}>
-                <span>{t("form.listenOn")}</span>
-                <span />
-                <span>{t("form.forwardTo")}</span>
-                <span />
-              </div>
-              {draft.forwards.map((forward, index) => (
-                <div key={index} className={cx("mapping-form__row", rowProblem(index) && "has-problem")}>
-                  <div className={cx("mapping-form__line", advanced && "is-advanced")}>
-                    <div className={cx("mapping-form__side", advanced && "is-advanced")}>
-                      {advanced && (
-                        <>
+              <section className="form-section">
+                <h3>{t("profile.section.auth")}</h3>
+                <Segmented<Auth["type"]>
+                  label={t("profile.section.auth")}
+                  value={draft.auth.type}
+                  onChange={setAuth}
+                  options={[
+                    { value: "password", label: t("profile.auth.password"), icon: <Lock size={14} /> },
+                    { value: "key", label: t("profile.auth.key"), icon: <KeyRound size={14} /> },
+                    { value: "agent", label: t("profile.auth.agent"), icon: <Bot size={14} /> },
+                  ]}
+                />
+                <p className="form-note">{t(`profile.auth.${draft.auth.type}.hint` as MessageKey)}</p>
+                {draft.auth.type === "key" && (
+                  <Field label={t("profile.keyPath")} error={message("keyPath")} htmlFor={keyId}>
+                    <div className="input-group">
+                      <input
+                        id={keyId}
+                        className="input input--mono"
+                        value={draft.auth.path}
+                        placeholder={t("profile.keyPath.placeholder")}
+                        onChange={(e) => change({ auth: { type: "key", path: e.target.value } })}
+                        aria-invalid={message("keyPath") !== null}
+                        data-field="keyPath"
+                        autoComplete="off"
+                        spellCheck={false}
+                      />
+                      <Button icon={<FolderOpen size={15} />} onClick={() => void browse()}>
+                        {t("profile.keyPath.browse")}
+                      </Button>
+                    </div>
+                  </Field>
+                )}
+                {hasSavedSecret && profileId && secretKind && (
+                  <div className="notice">
+                    <span>{t(`profile.saved.${secretKind}` as MessageKey)}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => void store.forgetSecrets(profileId).then(() => setSaved([]))}
+                    >
+                      {t("common.forget")}
+                    </Button>
+                  </div>
+                )}
+              </section>
+
+              <section className="form-section">
+                <div className="form-section__head">
+                  <h3>{t("profile.section.ports")}</h3>
+                  <button type="button" className="link" aria-expanded={advanced} onClick={() => setAdvanced((a) => !a)}>
+                    {t("form.advanced")}
+                  </button>
+                </div>
+                {message("forwards") && (
+                  <p className="field__error" role="alert">
+                    {message("forwards")}
+                  </p>
+                )}
+                <div className="mapping-form">
+                  <div className={cx("mapping-form__titles", advanced && "is-advanced")}>
+                    <span>{t("form.listenOn")}</span>
+                    <span />
+                    <span>{t("form.forwardTo")}</span>
+                    <span />
+                  </div>
+                  {draft.forwards.map((forward, index) => (
+                    <div key={index} className={cx("mapping-form__row", rowProblem(index) && "has-problem")}>
+                      <div className={cx("mapping-form__line", advanced && "is-advanced")}>
+                        <div className={cx("mapping-form__side", advanced && "is-advanced")}>
+                          {advanced && (
+                            <>
+                              <input
+                                className="input input--mono"
+                                aria-label={t("form.bindHost")}
+                                title={t("form.bindHost.hint")}
+                                value={forward.bindHost}
+                                onChange={(e) => changeForward(index, { bindHost: e.target.value })}
+                                aria-invalid={problem?.forwardIndex === index && problem.field === "bindHost"}
+                                data-field={`bindHost-${index}`}
+                                spellCheck={false}
+                              />
+                              <span aria-hidden="true">:</span>
+                            </>
+                          )}
                           <input
                             className="input input--mono"
-                            aria-label={t("form.bindHost")}
-                            title={t("form.bindHost.hint")}
-                            value={forward.bindHost}
-                            onChange={(e) => changeForward(index, { bindHost: e.target.value })}
-                            aria-invalid={problem?.forwardIndex === index && problem.field === "bindHost"}
-                            data-field={`bindHost-${index}`}
+                            inputMode="numeric"
+                            aria-label={t("form.localPort")}
+                            placeholder="8080"
+                            value={showPort(forward.localPort)}
+                            onChange={(e) => changeLocalPort(index, readPort(e.target.value))}
+                            aria-invalid={
+                              problem?.forwardIndex === index &&
+                              (problem.field === "localPort" || problem.field === "duplicatePort")
+                            }
+                            data-field={`localPort-${index}`}
+                            data-autofocus={imported && index === 0 && forward.localPort === 0 ? "" : undefined}
+                          />
+                        </div>
+                        <span className="mapping-form__arrow" aria-hidden="true">
+                          →
+                        </span>
+                        <div className="mapping-form__remote">
+                          <input
+                            className="input input--mono"
+                            aria-label={t("form.remoteHost")}
+                            title={t("form.remoteHost.hint")}
+                            value={forward.remoteHost}
+                            onChange={(e) => changeForward(index, { remoteHost: e.target.value })}
+                            data-field={`remoteHost-${index}`}
                             spellCheck={false}
                           />
                           <span aria-hidden="true">:</span>
-                        </>
+                          <input
+                            className="input input--mono"
+                            inputMode="numeric"
+                            aria-label={t("form.remotePort")}
+                            placeholder="80"
+                            value={showPort(forward.remotePort)}
+                            onChange={(e) => changeForward(index, { remotePort: readPort(e.target.value) })}
+                            aria-invalid={problem?.forwardIndex === index && problem.field === "remotePort"}
+                            data-field={`remotePort-${index}`}
+                          />
+                        </div>
+                        <IconButton
+                          label={t("form.remove")}
+                          danger
+                          disabled={draft.forwards.length === 1}
+                          onClick={() => change({ forwards: draft.forwards.filter((_, i) => i !== index) })}
+                        >
+                          <Trash size={15} />
+                        </IconButton>
+                      </div>
+                      <input
+                        className="input input--label"
+                        aria-label={t("form.label")}
+                        placeholder={t("form.label.placeholder")}
+                        value={forward.label}
+                        onChange={(e) => changeForward(index, { label: e.target.value })}
+                      />
+                      {rowProblem(index) && (
+                        <p className="field__error" role="alert">
+                          {rowProblem(index)}
+                        </p>
                       )}
-                      <input
-                        className="input input--mono"
-                        inputMode="numeric"
-                        aria-label={t("form.localPort")}
-                        placeholder="8080"
-                        value={showPort(forward.localPort)}
-                        onChange={(e) => changeLocalPort(index, readPort(e.target.value))}
-                        aria-invalid={
-                          problem?.forwardIndex === index &&
-                          (problem.field === "localPort" || problem.field === "duplicatePort")
-                        }
-                        data-field={`localPort-${index}`}
-                        data-autofocus={imported && index === 0 && forward.localPort === 0 ? "" : undefined}
-                      />
                     </div>
-                    <span className="mapping-form__arrow" aria-hidden="true">
-                      →
-                    </span>
-                    <div className="mapping-form__remote">
-                      <input
-                        className="input input--mono"
-                        aria-label={t("form.remoteHost")}
-                        title={t("form.remoteHost.hint")}
-                        value={forward.remoteHost}
-                        onChange={(e) => changeForward(index, { remoteHost: e.target.value })}
-                        data-field={`remoteHost-${index}`}
-                        spellCheck={false}
-                      />
-                      <span aria-hidden="true">:</span>
-                      <input
-                        className="input input--mono"
-                        inputMode="numeric"
-                        aria-label={t("form.remotePort")}
-                        placeholder="80"
-                        value={showPort(forward.remotePort)}
-                        onChange={(e) => changeForward(index, { remotePort: readPort(e.target.value) })}
-                        aria-invalid={problem?.forwardIndex === index && problem.field === "remotePort"}
-                        data-field={`remotePort-${index}`}
-                      />
-                    </div>
-                    <IconButton
-                      label={t("form.remove")}
-                      danger
-                      disabled={draft.forwards.length === 1}
-                      onClick={() => change({ forwards: draft.forwards.filter((_, i) => i !== index) })}
-                    >
-                      <Trash size={15} />
-                    </IconButton>
-                  </div>
-                  <input
-                    className="input input--label"
-                    aria-label={t("form.label")}
-                    placeholder={t("form.label.placeholder")}
-                    value={forward.label}
-                    onChange={(e) => changeForward(index, { label: e.target.value })}
-                  />
-                  {rowProblem(index) && (
-                    <p className="field__error" role="alert">
-                      {rowProblem(index)}
-                    </p>
-                  )}
+                  ))}
+                  <Button
+                    size="sm"
+                    icon={<Plus size={14} />}
+                    onClick={() => change({ forwards: [...draft.forwards, blankForward()] })}
+                    data-field="forwards"
+                  >
+                    {t("form.add")}
+                  </Button>
                 </div>
-              ))}
-              <Button
-                size="sm"
-                icon={<Plus size={14} />}
-                onClick={() => change({ forwards: [...draft.forwards, blankForward()] })}
-                data-field="forwards"
-              >
-                {t("form.add")}
-              </Button>
+              </section>
+
+              <section className="form-section">
+                <h3>{t("profile.section.options")}</h3>
+                <ToggleRow
+                  label={t("profile.autoReconnect")}
+                  hint={t("profile.autoReconnect.hint")}
+                  checked={draft.autoReconnect}
+                  onChange={(autoReconnect) => change({ autoReconnect })}
+                />
+                <ToggleRow
+                  label={t("profile.connectOnLaunch")}
+                  checked={draft.connectOnLaunch}
+                  onChange={(connectOnLaunch) => change({ connectOnLaunch })}
+                />
+              </section>
             </div>
-          </section>
 
-          <section className="form-section">
-            <h3>{t("profile.section.options")}</h3>
-            <ToggleRow
-              label={t("profile.autoReconnect")}
-              hint={t("profile.autoReconnect.hint")}
-              checked={draft.autoReconnect}
-              onChange={(autoReconnect) => change({ autoReconnect })}
-            />
-            <ToggleRow
-              label={t("profile.connectOnLaunch")}
-              checked={draft.connectOnLaunch}
-              onChange={(connectOnLaunch) => change({ connectOnLaunch })}
-            />
-          </section>
-        </div>
-
-        <footer className="modal__footer">
-          {restartNote && <p className="modal__footnote">{t("profile.restartNote")}</p>}
-          <Button onClick={onClose}>{t("common.cancel")}</Button>
-          <Button type="submit" variant={running ? "primary" : "secondary"} disabled={busy}>
-            {t("common.save")}
-          </Button>
-          {!running && (
-            <Button variant="primary" disabled={busy} onClick={() => void submit(true)}>
-              {t("profile.saveAndConnect")}
-            </Button>
-          )}
-        </footer>
-      </motion.form>
+            <footer className="modal__footer">
+              {restartNote && <p className="modal__footnote">{t("profile.restartNote")}</p>}
+              <Button onClick={onClose}>{t("common.cancel")}</Button>
+              <Button type="submit" variant={running ? "primary" : "secondary"} disabled={busy}>
+                {t("common.save")}
+              </Button>
+              {!running && (
+                <Button variant="primary" disabled={busy} onClick={() => void submit(true)}>
+                  {t("profile.saveAndConnect")}
+                </Button>
+              )}
+            </footer>
+          </form>
+        )}
+      </motion.div>
     </Modal>
   );
 }
