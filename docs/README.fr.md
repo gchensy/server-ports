@@ -8,9 +8,16 @@
 
 </div>
 
-> **Statut : développement initial.** Il n'existe pas encore de version publiée. Le moteur de tunnels et l'interface sont en place, et l'intégration continue (CI) compile, teste et empaquette l'application sous Linux, macOS et Windows, mais elle n'a été lancée que sous Linux ; les installeurs pour macOS et Windows n'ont pas été testés.
+> **Statut : développement initial.** La première version est la v0.1.0. Le moteur de tunnels et l'interface sont en place, et l'intégration continue (CI) compile, teste et empaquette l'application sous Linux, macOS et Windows, mais seul le `.deb` pour Linux a été installé et essayé jusqu'ici (sous Ubuntu) : les autres installeurs n'ont pas été testés, et aucun n'est signé.
 
 Server Ports est une petite application de bureau multiplateforme (Windows, macOS, Linux) qui maintient vos redirections de ports SSH. Choisissez un serveur, listez les ports dont vous avez besoin, et ils apparaissent sur `localhost`. C'est la même chose que `ssh -L`, sans jongler avec le terminal.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/overview-dark.png">
+    <img src="images/overview.png" alt="La fenêtre de Server Ports : la liste des serveurs à gauche et, à droite, le serveur sélectionné avec sa connexion et deux redirections de ports" width="860">
+  </picture>
+</p>
 
 ## Fonctionnalités
 
@@ -25,6 +32,76 @@ Server Ports est une petite application de bureau multiplateforme (Windows, macO
 - **Résident dans la zone de notification** : fermer la fenêtre réduit l'application dans la zone de notification au lieu de la quitter (désactivable), et le menu de l'icône active ou désactive chaque serveur. L'application peut aussi démarrer à l'ouverture de session.
 - **Thème clair et sombre**, avec une interface en neuf langues : anglais, chinois simplifié et traditionnel, japonais, coréen, espagnol, français, allemand et russe. Elle suit la langue du système tant que vous n'en choisissez pas une.
 - **Légère** : conçue avec Tauri 2, un noyau en Rust et la vue web du système, sans navigateur embarqué.
+
+## Installation
+
+Téléchargez l'installeur pour votre système depuis la [page Releases](https://github.com/gchensy/server-ports/releases), puis lancez-le :
+
+- **Windows** : l'installeur `.exe`, ou le `.msi`. Les installeurs ne sont pas encore signés, donc Windows SmartScreen affiche un avertissement au premier lancement : choisissez Informations complémentaires, puis Exécuter quand même.
+- **macOS** : le `.dmg` (`aarch64` pour les Mac Apple silicon, `x64` pour les Mac Intel). Faites glisser Server Ports dans Applications. L'application n'est signée qu'« ad hoc » : au premier lancement, faites un clic droit puis Ouvrir (ou autorisez-la dans Réglages Système, Confidentialité et sécurité).
+- **Linux** : le `.deb` (Debian, Ubuntu), le `.rpm` (Fedora, openSUSE) ou l'`.AppImage`. Par exemple :
+
+```bash
+sudo apt install ./Server*.deb     # Debian, Ubuntu
+sudo dnf install ./Server*.rpm     # Fedora
+chmod +x Server*.AppImage && ./Server*.AppImage
+```
+
+Sous GNOME, l'icône de la zone de notification nécessite l'extension AppIndicator (voir « Limitations connues » plus bas). L'application ne se met pas à jour toute seule : pour passer à une nouvelle version, installez-la par-dessus l'ancienne.
+
+## Premiers pas
+
+Les captures d'écran montrent l'interface en anglais ; les noms des boutons dans le texte sont ceux de l'interface en français.
+
+### 1. Ajoutez un serveur
+
+Cliquez sur **Nouveau serveur** et remplissez le formulaire :
+
+- **Serveur** : l'hôte (un nom ou une adresse IP), le port SSH, l'utilisateur et, si vous le souhaitez, un nom pour la liste.
+- **Connexion** : un **Mot de passe**, un **Fichier de clé** privée (**Parcourir…** permet de le choisir) ou l'**Agent SSH**.
+- **Redirections de ports** : saisissez dans **Écouter sur** le port que vous voulez utiliser sur votre propre ordinateur ; le port du serveur vers lequel rediriger (**Rediriger vers**) le suit, et vous pouvez le modifier. Ajoutez une redirection pour chaque port dont vous avez besoin, avec une étiquette si vous le souhaitez. **Avancé** affiche l'**Adresse locale** sur laquelle un port écoute : `127.0.0.1` le réserve à votre ordinateur.
+- **Options** : **Se reconnecter automatiquement** quand la connexion tombe, et **Se connecter au démarrage de l'application**.
+
+<p align="center">
+  <img src="images/new-server.png" alt="La boîte de dialogue « Nouveau serveur », remplie" width="440">
+</p>
+
+**Enregistrer et connecter** enregistre le serveur et se connecte aussitôt ; **Enregistrer** se contente de l'enregistrer. Ensuite, les boutons crayon et corbeille en haut à droite d'un serveur servent à le modifier et à le supprimer.
+
+Vos serveurs sont déjà dans `~/.ssh/config` ? Basculez la boîte de dialogue sur **Depuis la config SSH**, cochez les serveurs voulus et cliquez sur **Importer**. L'hôte, l'utilisateur, le port, le fichier de clé et les ports `LocalForward` sont repris avec eux ; votre configuration SSH est seulement lue, jamais modifiée.
+
+<p align="center">
+  <img src="images/import-ssh-config.png" alt="La boîte de dialogue « Nouveau serveur » avec la liste des serveurs trouvés dans la configuration SSH" width="520">
+</p>
+
+### 2. Connectez-vous
+
+Activez le serveur dans la liste, ou ouvrez-le et cliquez sur **Connecter**. La première fois que vous vous connectez à un serveur, Server Ports affiche le type de clé et l'empreinte qu'il a présentés, et demande si vous lui faites confiance. Comparez l'empreinte avec celle que vous attendez (sur le serveur, `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` l'affiche), puis cliquez sur **Faire confiance et continuer**, ou sur **Ne pas se connecter** si ce n'est pas la bonne. La clé est mémorisée ensuite et, si elle change un jour, la connexion est interrompue et vous en êtes informé.
+
+<p align="center">
+  <img src="images/trust-server.png" alt="La question « Faire confiance à ce serveur ? », avec le type de clé et l'empreinte" width="380">
+</p>
+
+Si le serveur demande un mot de passe, ou si votre clé est protégée par une phrase secrète, l'application vous les demande ensuite. Cochez **Mémoriser dans le trousseau du système** pour les conserver dans le magasin d'identifiants de votre système ; sinon, ils ne sont gardés en mémoire que le temps de la connexion au serveur.
+
+### 3. Utilisez les ports
+
+Une fois le serveur connecté, ses redirections de ports affichent un point vert et les ports sont ouverts sur votre ordinateur : ouvrez `http://127.0.0.1:8080` dans votre navigateur, ou dirigez n'importe quel outil vers le port local, par exemple un client de base de données vers `127.0.0.1:5432`.
+
+- Les deux boutons à droite d'une redirection ouvrent son adresse dans votre navigateur et la copient.
+- Sous l'adresse, vous voyez un petit graphique de débit, les données envoyées et reçues, et le nombre de connexions ouvertes à l'instant et au total.
+- L'onglet **Activité** montre ce qui s'est passé sur ce serveur (connexion, reconnexion, erreurs) : regardez-y d'abord si quelque chose ne marche pas.
+- Si la connexion tombe, Server Ports se reconnecte tout seul (sauf si vous l'avez désactivé pour ce serveur), en attendant un peu plus longtemps à chaque fois, jusqu'à 30 s. **Réessayer maintenant** saute l'attente.
+
+### 4. Laissez-le tourner
+
+Fermez la fenêtre : les tunnels continuent de fonctionner dans la zone de notification. Cliquez sur l'icône, ou choisissez **Afficher Server Ports** dans son menu, pour rouvrir la fenêtre ; lancer l'application une seconde fois fait la même chose. Le menu de l'icône permet aussi d'activer ou de désactiver chaque serveur, de tout connecter ou de tout déconnecter, et propose **Quitter**.
+
+Ouvrez **Paramètres**, en bas à gauche de la fenêtre, pour choisir la langue et l'apparence, démarrer l'application à l'ouverture de session, ou la faire se fermer avec sa fenêtre au lieu de la laisser dans la zone de notification. **Quitter Server Ports** ferme l'application et tous ses tunnels.
+
+<p align="center">
+  <img src="images/settings.png" alt="La boîte de dialogue « Paramètres »" width="360">
+</p>
 
 ## Fonctionnement
 
@@ -90,5 +167,6 @@ Les installeurs ne sont pas encore signés. Les versions macOS sont signées « 
 ```text
 src/         Interface utilisateur en React + TypeScript
 src-tauri/   Noyau Rust : redirection de ports SSH, stockage des profils, magasin d'identifiants du système, zone de notification
+docs/        Traductions de ce README et captures d'écran qu'elles montrent
 .github/     Workflows de CI et de publication
 ```

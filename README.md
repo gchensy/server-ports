@@ -8,9 +8,16 @@ English | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-T
 
 </div>
 
-> **Status: early development.** There is no release yet. The tunnel engine and the interface are in place, and CI builds, tests and packages the app on Linux, macOS and Windows, but it has only been run on Linux so far: the macOS and Windows installers are untested.
+> **Status: early development.** The first release is v0.1.0. The tunnel engine and the interface are in place, and CI builds, tests and packages the app on Linux, macOS and Windows, but only the Linux `.deb` has been installed and tried so far (on Ubuntu): the other installers are untested, and none of them is code-signed.
 
 Server Ports is a small cross-platform desktop app (Windows, macOS, Linux) that keeps your SSH port forwards running. Pick a server, list the ports you need, and they appear on `localhost`. It is the same thing as `ssh -L`, minus the terminal juggling.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/overview-dark.png">
+    <img src="docs/images/overview.png" alt="The Server Ports window: the list of servers on the left, and on the right the selected server with its connection and two port mappings" width="860">
+  </picture>
+</p>
 
 ## Features
 
@@ -25,6 +32,74 @@ Server Ports is a small cross-platform desktop app (Windows, macOS, Linux) that 
 - **Lives in the tray**: closing the window hides the app in the system tray instead of quitting (this can be turned off), and the tray menu switches each server on or off. The app can also start when you sign in.
 - **Light and dark theme**, with an interface in nine languages: English, Simplified and Traditional Chinese, Japanese, Korean, Spanish, French, German and Russian. It follows the system language until you pick one.
 - **Small footprint**: built with Tauri 2, a Rust core and the system web view, with no bundled browser.
+
+## Install
+
+Download the installer for your system from the [Releases page](https://github.com/gchensy/server-ports/releases) and run it:
+
+- **Windows**: the `.exe` installer, or the `.msi`. The installers are not code-signed yet, so Windows SmartScreen warns you on the first run: choose More info, then Run anyway.
+- **macOS**: the `.dmg` (`aarch64` for Apple silicon, `x64` for Intel). Drag Server Ports into Applications. The app is only signed ad hoc, so open it the first time with a right-click and Open, or allow it in System Settings, Privacy & Security.
+- **Linux**: the `.deb` (Debian, Ubuntu), the `.rpm` (Fedora, openSUSE) or the `.AppImage`. For example:
+
+```bash
+sudo apt install ./Server*.deb     # Debian, Ubuntu
+sudo dnf install ./Server*.rpm     # Fedora
+chmod +x Server*.AppImage && ./Server*.AppImage
+```
+
+On GNOME the tray icon needs the AppIndicator extension (see Known limitations below). The app does not update itself: to upgrade, install the newer version over the old one.
+
+## Getting started
+
+### 1. Add a server
+
+Click **New server** and fill in the form:
+
+- **Server**: the host (a name or an IP address), the SSH port, the user, and a name for the list if you like.
+- **Sign-in**: a **Password**, a private **Key file** (**Browse…** picks it) or the **SSH agent**.
+- **Port mappings**: type the port you want on your own computer in **Listen on**; the port to forward to on the server (**Forward to**) follows it, and you can change it. Add a mapping for every port you need, with a label if you like. **Advanced** shows the **Local address** a port listens on: `127.0.0.1` keeps it to your own computer.
+- **Options**: **Reconnect automatically** when the connection drops, and **Connect when the app starts**.
+
+<p align="center">
+  <img src="docs/images/new-server.png" alt="The New server dialog, filled in" width="440">
+</p>
+
+**Save & connect** saves the server and connects at once; **Save** only saves it. Later, the pencil and bin buttons at the top right of a server edit and delete it.
+
+Do you have your servers in `~/.ssh/config` already? Switch the dialog to **From SSH config**, tick the servers you want and click **Import**. The host, user, port, key file and `LocalForward` ports come along; your SSH config is only read, never changed.
+
+<p align="center">
+  <img src="docs/images/import-ssh-config.png" alt="The New server dialog listing the servers found in the SSH config" width="520">
+</p>
+
+### 2. Connect
+
+Switch the server on in the list, or open it and click **Connect**. The first time you connect to a server, Server Ports shows the key type and the fingerprint it presented and asks whether to trust it. Compare the fingerprint with the one you expect (on the server, `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` prints it), then click **Trust and continue**, or **Don't connect** if it is not the one you expect. The key is remembered from then on, and if it ever changes, the connection is stopped and you are told.
+
+<p align="center">
+  <img src="docs/images/trust-server.png" alt="The Trust this server? question, with the key type and the fingerprint" width="380">
+</p>
+
+If the server signs you in with a password, or with a key that has a passphrase, you are asked for it next. Tick **Remember in the system keychain** to keep it in your system's credential store; otherwise it is only held in memory while the server is connected.
+
+### 3. Use the ports
+
+Once the server is connected, its port mappings show a green dot and the ports are open on your computer: browse to `http://127.0.0.1:8080`, or point any tool at the local port, such as a database client at `127.0.0.1:5432`.
+
+- The two buttons at the right of a mapping open its address in your browser and copy it.
+- Under the address you see a small throughput graph, the data sent and received, and how many connections are open now and in total.
+- The **Activity** tab shows what happened on this server (connecting, reconnecting, errors): look there first if something does not work.
+- If the connection drops, Server Ports reconnects by itself (unless you turned that off for the server), waiting a little longer each time, up to 30 s. **Retry now** skips the wait.
+
+### 4. Leave it running
+
+Close the window and the tunnels keep running in the system tray. Click the tray icon, or choose **Show Server Ports** in its menu, to bring the window back; starting the app a second time does the same. The tray menu also switches each server on or off, connects or disconnects all of them, and has **Quit**.
+
+Open **Settings**, at the bottom left of the window, to choose the language and the appearance, to start the app when you sign in, or to quit the app along with its window instead of keeping it in the tray. **Quit Server Ports** closes the app and all its tunnels.
+
+<p align="center">
+  <img src="docs/images/settings.png" alt="The Settings dialog" width="360">
+</p>
 
 ## How it works
 
@@ -90,5 +165,6 @@ The installers are not code-signed yet. macOS builds are signed ad hoc, so the f
 ```text
 src/         React + TypeScript user interface
 src-tauri/   Rust core: SSH port forwarding, profile storage, OS credential store, tray
+docs/        Translations of this README and the screenshots they show
 .github/     CI and release workflows
 ```
