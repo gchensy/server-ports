@@ -11,6 +11,7 @@ export const fr: Catalog = {
 
   "sidebar.new": "Nouveau serveur",
   "sidebar.settings": "Paramètres",
+  "sidebar.import": "Importer la config SSH",
   "sidebar.servers": "Serveurs",
   "sidebar.connect": "Connecter {name}",
   "sidebar.disconnect": "Déconnecter {name}",
@@ -56,6 +57,9 @@ export const fr: Catalog = {
   "empty.body":
     "Ajoutez un serveur et choisissez les ports dont vous avez besoin. Ils apparaissent sur cet ordinateur, restent ouverts en arrière-plan et se reconnectent tout seuls.",
   "empty.cta": "Ajouter votre premier serveur",
+  "empty.found.one": "{n} serveur trouvé dans votre configuration SSH",
+  "empty.found.other": "{n} serveurs trouvés dans votre configuration SSH",
+  "empty.import": "Importer…",
 
   "profile.new.title": "Nouveau serveur",
   "profile.edit.title": "Modifier le serveur",
@@ -86,6 +90,7 @@ export const fr: Catalog = {
   "profile.connectOnLaunch": "Se connecter au démarrage de l’application",
   "profile.restartNote": "L’enregistrement de modifications de la connexion reconnecte ce serveur.",
   "profile.saveAndConnect": "Enregistrer et connecter",
+  "profile.imported": "Issu de votre configuration SSH. Ajoutez les ports à rediriger, puis enregistrez.",
 
   "form.listenOn": "Écouter sur",
   "form.forwardTo": "Rediriger vers",
@@ -111,6 +116,16 @@ export const fr: Catalog = {
   "invalid.bindHost": "L’adresse locale doit être une adresse IP.",
   "invalid.remoteHost": "L’hôte distant ne doit pas contenir d’espaces.",
   "invalid.duplicatePort": "Une autre redirection utilise déjà ce port local.",
+
+  "import.title": "Importer depuis la configuration SSH",
+  "import.intro":
+    "Choisissez les serveurs à copier dans Server Ports. Votre fichier de configuration SSH est seulement lu, jamais modifié.",
+  "import.empty": "Aucun serveur trouvé dans votre configuration SSH.",
+  "import.added": "Déjà ajouté",
+  "import.unsupported": "Pas encore pris en charge : {kind}",
+  "import.noPorts": "ports à choisir",
+  "import.selected": "Sélectionnés : {n}",
+  "import.confirm": "Importer",
 
   "hostKey.title": "Faire confiance à ce serveur ?",
   "hostKey.body":
@@ -190,6 +205,7 @@ export const fr: Catalog = {
   "error.bind.title": "Le port n’a pas pu être ouvert",
   "error.storage.title": "Enregistrement impossible",
   "error.keychain.title": "Le trousseau du système n’est pas disponible",
+  "error.sshConfig.title": "La configuration SSH est illisible",
   "error.notFound.title": "Ce serveur n’existe plus",
   "error.other.title": "Un problème est survenu",
   "error.unknown.title": "Un problème est survenu",

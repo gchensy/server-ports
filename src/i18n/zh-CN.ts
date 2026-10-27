@@ -10,6 +10,7 @@ export const zhCN: Catalog = {
 
   "sidebar.new": "新建服务器",
   "sidebar.settings": "设置",
+  "sidebar.import": "从 SSH 配置导入",
   "sidebar.servers": "服务器",
   "sidebar.connect": "连接 {name}",
   "sidebar.disconnect": "断开 {name}",
@@ -54,6 +55,9 @@ export const zhCN: Catalog = {
   "empty.title": "在本机访问服务器上的端口",
   "empty.body": "添加一台服务器，选好需要的端口，它们就会出现在这台电脑上，在后台保持畅通并自动重连。",
   "empty.cta": "添加第一台服务器",
+  "empty.found.one": "在 SSH 配置中找到 {n} 台服务器",
+  "empty.found.other": "在 SSH 配置中找到 {n} 台服务器",
+  "empty.import": "导入…",
 
   "profile.new.title": "新建服务器",
   "profile.edit.title": "编辑服务器",
@@ -83,6 +87,7 @@ export const zhCN: Catalog = {
   "profile.connectOnLaunch": "应用启动时连接",
   "profile.restartNote": "修改连接设置后，保存时会重新连接这台服务器。",
   "profile.saveAndConnect": "保存并连接",
+  "profile.imported": "来自 SSH 配置。添加要转发的端口，然后保存。",
 
   "form.listenOn": "本机监听",
   "form.forwardTo": "转发到",
@@ -108,6 +113,15 @@ export const zhCN: Catalog = {
   "invalid.bindHost": "本地地址必须是 IP 地址。",
   "invalid.remoteHost": "远端主机不能包含空格。",
   "invalid.duplicatePort": "已有另一个映射使用了这个本地端口。",
+
+  "import.title": "从 SSH 配置导入",
+  "import.intro": "选择要复制到 Server Ports 的服务器。SSH 配置文件只会被读取，不会被修改。",
+  "import.empty": "SSH 配置中没有找到服务器。",
+  "import.added": "已添加",
+  "import.unsupported": "暂不支持：{kind}",
+  "import.noPorts": "需选择端口",
+  "import.selected": "已选 {n} 项",
+  "import.confirm": "导入",
 
   "hostKey.title": "信任这台服务器？",
   "hostKey.body": "{name}（{host}:{port}）出示了一个此前没有见过的密钥。信任之前，请先核对指纹是否与预期一致。",
@@ -181,6 +195,7 @@ export const zhCN: Catalog = {
   "error.bind.title": "无法打开这个端口",
   "error.storage.title": "无法保存",
   "error.keychain.title": "系统钥匙串不可用",
+  "error.sshConfig.title": "无法读取 SSH 配置",
   "error.notFound.title": "这台服务器已不存在",
   "error.other.title": "出错了",
   "error.unknown.title": "出错了",

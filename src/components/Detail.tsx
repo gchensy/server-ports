@@ -100,7 +100,7 @@ function ServerView({ profile, onEdit, onDelete }: { profile: Profile; onEdit: (
   );
 }
 
-function authSummary(profile: Profile, t: ReturnType<typeof useI18n>["t"]): string {
+export function authSummary(profile: Profile, t: ReturnType<typeof useI18n>["t"]): string {
   switch (profile.auth.type) {
     case "password":
       return t("detail.auth.password");

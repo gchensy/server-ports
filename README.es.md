@@ -15,6 +15,7 @@ Server Ports es una pequeña aplicación de escritorio multiplataforma (Windows,
 ## Características
 
 - **Perfiles de servidor**: un perfil por cada servidor SSH, con tantas asignaciones de puertos como necesites.
+- **Importación desde tu configuración SSH**: elige servidores de `~/.ssh/config` y cópialos a Server Ports de una vez, desde la barra lateral o desde la pantalla de inicio. Se traen el nombre del host, el usuario, el puerto, el archivo de clave (`IdentityFile`) y las redirecciones (`LocalForward`), incluidos los valores heredados de los bloques `Host *` y de los archivos `Include`. Es una copia única: tu configuración SSH solo se lee, nunca se modifica.
 - **Tres formas de iniciar sesión**: contraseña, archivo de clave privada (con frase de contraseña opcional) o ssh-agent (agente de OpenSSH o Pageant).
 - **Los secretos no van al archivo de configuración**: si lo pides, las contraseñas y las frases de contraseña de las claves se guardan en el Llavero de macOS, el Administrador de credenciales de Windows o el Secret Service de Linux; si no, solo se conservan en memoria mientras el servidor está conectado.
 - **Verificación de la clave del host**: la clave de un servidor que no habías visto antes se muestra con su huella digital y solo se acepta si tú lo confirmas; si una clave cambia, se avisa.
@@ -39,7 +40,7 @@ Equivale a `ssh -L 127.0.0.1:8080:127.0.0.1:80 user@server`. El destino se resue
 
 - Todavía no admite el inicio de sesión interactivo con teclado (doble factor), los saltos a través de otros servidores (`ProxyJump`) ni los certificados de host.
 - Solo redirecciones locales (`ssh -L`); las remotas (`-R`) y las SOCKS (`-D`) no están soportadas.
-- Los servidores se añaden a mano; `~/.ssh/config` no se lee.
+- La importación desde `~/.ssh/config` es una copia única; los cambios posteriores en el archivo no se recogen. Los hosts que necesitan `ProxyJump` o `ProxyCommand` aparecen en la lista, pero todavía no se pueden importar; los bloques `Match` se omiten y las líneas `RemoteForward` y `DynamicForward` se ignoran. Un host sin `LocalForward` abre el formulario para que elijas sus puertos.
 - En GNOME, el icono de la bandeja necesita la extensión AppIndicator. Sin ella, desactiva la opción de la bandeja en los ajustes o vuelve a iniciar la aplicación para recuperar su ventana.
 
 ## Desarrollo

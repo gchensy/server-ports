@@ -35,6 +35,13 @@ function blankProfile(): Profile {
   };
 }
 
+/** A copy to edit: the server being edited, or one found in the SSH config, or an empty one. */
+function startingPoint(profile: Profile | undefined): Profile {
+  if (!profile) return blankProfile();
+  const copy = structuredClone(profile);
+  return copy.forwards.length > 0 ? copy : { ...copy, forwards: [blankForward()] };
+}
+
 const showPort = (port: number) => (port === 0 ? "" : String(port));
 const readPort = (text: string) => Number(text.replace(/\D/g, "").slice(0, 5)) || 0;
 const validPort = (port: number) => port >= 1 && port <= 65535;
@@ -65,7 +72,19 @@ function reconnects(before: Profile, after: Profile): boolean {
   return essentials(before) !== essentials(after);
 }
 
-export function ProfileDialog({ profileId, onClose }: { profileId: ProfileId | null; onClose: () => void }) {
+/**
+ * The form for a server: new, or the one with `profileId`. `imported` (a server found in the SSH
+ * config that still needs its ports) opens it as a new server with the fields filled in.
+ */
+export function ProfileDialog({
+  profileId,
+  imported,
+  onClose,
+}: {
+  profileId: ProfileId | null;
+  imported?: Profile;
+  onClose: () => void;
+}) {
   const i18n = useI18n();
   const { t } = i18n;
   const store = useStore();
@@ -73,7 +92,7 @@ export function ProfileDialog({ profileId, onClose }: { profileId: ProfileId | n
   const original = useAppState((state) => state.profiles.find((p) => p.id === profileId));
   const running = useAppState((state) => isActive(profileId ? state.runtimes[profileId] : undefined));
 
-  const [draft, setDraft] = useState<Profile>(() => (original ? structuredClone(original) : blankProfile()));
+  const [draft, setDraft] = useState<Profile>(() => startingPoint(original ?? imported));
   const [problem, setProblem] = useState<Problem | null>(null);
   const [advanced, setAdvanced] = useState(() => draft.forwards.some((f) => f.bindHost !== LOOPBACK));
   const [saved, setSaved] = useState<SecretKind[]>([]);
@@ -176,6 +195,8 @@ export function ProfileDialog({ profileId, onClose }: { profileId: ProfileId | n
           <h2>{title}</h2>
         </header>
 
+        {imported && <p className="notice modal__notice">{t("profile.imported")}</p>}
+
         <div className="modal__scroll">
           <section className="form-section">
             <h3>{t("profile.section.server")}</h3>
@@ -199,7 +220,7 @@ export function ProfileDialog({ profileId, onClose }: { profileId: ProfileId | n
                   onChange={(e) => change({ host: e.target.value })}
                   aria-invalid={message("host") !== null}
                   data-field="host"
-                  data-autofocus={original ? undefined : ""}
+                  data-autofocus={original || imported ? undefined : ""}
                   autoComplete="off"
                   spellCheck={false}
                 />
@@ -327,6 +348,7 @@ export function ProfileDialog({ profileId, onClose }: { profileId: ProfileId | n
                           (problem.field === "localPort" || problem.field === "duplicatePort")
                         }
                         data-field={`localPort-${index}`}
+                        data-autofocus={imported && index === 0 && forward.localPort === 0 ? "" : undefined}
                       />
                     </div>
                     <span className="mapping-form__arrow" aria-hidden="true">

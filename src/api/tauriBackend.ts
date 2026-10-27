@@ -5,6 +5,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import type { Backend } from "./backend";
 import { toCommandError } from "./errors";
 import type {
+  DiscoveredHost,
   EngineEvent,
   Profile,
   ProfileId,
@@ -31,6 +32,7 @@ export class TauriBackend implements Backend {
 
   saveProfile = (profile: Profile) => this.call<Profile>("save_profile", { profile });
   deleteProfile = (id: ProfileId) => this.call<void>("delete_profile", { id });
+  discoverSshHosts = () => this.call<DiscoveredHost[]>("discover_ssh_hosts");
   connect = (id: ProfileId) => this.call<void>("connect", { id });
   disconnect = (id: ProfileId) => this.call<void>("disconnect", { id });
 

@@ -15,6 +15,7 @@ Server Ports is a small cross-platform desktop app (Windows, macOS, Linux) that 
 ## Features
 
 - **Server profiles**: one profile per SSH server, with as many port mappings as you need.
+- **Import from your SSH config**: pick servers from `~/.ssh/config` and copy them into Server Ports in one go, from the sidebar or from the start screen. Host name, user, port, key file (`IdentityFile`) and port forwards (`LocalForward`) come along, including settings inherited from `Host *` blocks and `Include`d files. It is a one-time copy: your SSH config is only read, never changed.
 - **Three ways to sign in**: password, private key file (with an optional passphrase), or ssh-agent (OpenSSH agent or Pageant).
 - **Secrets stay out of the config file**: if you ask for it, passwords and key passphrases are kept in the macOS Keychain, Windows Credential Manager or the Linux Secret Service; otherwise they are only held in memory while a server is connected.
 - **Host key verification**: a server key you have not seen before is shown with its fingerprint and trusted only if you say so; a key that has changed is flagged.
@@ -39,7 +40,7 @@ That is the same as `ssh -L 127.0.0.1:8080:127.0.0.1:80 user@server`. The target
 
 - No keyboard-interactive (two-factor) login, jump hosts (`ProxyJump`) or host certificates yet.
 - Only local forwards (`ssh -L`); remote (`-R`) and SOCKS (`-D`) forwards are not supported.
-- Servers are added by hand; `~/.ssh/config` is not read.
+- Importing from `~/.ssh/config` is a one-time copy; later edits to the file are not picked up. Hosts that need `ProxyJump` or `ProxyCommand` are listed but cannot be imported yet, `Match` blocks are skipped, and `RemoteForward` and `DynamicForward` lines are ignored. A host without a `LocalForward` opens the form so you can choose its ports.
 - On GNOME the tray icon needs the AppIndicator extension. Without it, turn off "Keep running in the tray when the window is closed" in Settings, or start the app again to bring its window back.
 
 ## Development

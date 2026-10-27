@@ -1,12 +1,31 @@
-import { Plus } from "lucide-react";
+import { FileTerminal, Plus } from "lucide-react";
 import { motion } from "motion/react";
-import { useI18n } from "../state/services";
+import { useEffect, useState } from "react";
+import { useI18n, useServices } from "../state/services";
 import { gentle } from "./motion";
 import { Button } from "./ui";
 
 /** The first thing a new user sees: what the app is for, and where to start. */
-export function EmptyState({ onAdd }: { onAdd: () => void }) {
-  const { t } = useI18n();
+export function EmptyState({ onAdd, onImport }: { onAdd: () => void; onImport: () => void }) {
+  const i18n = useI18n();
+  const { t } = i18n;
+  const { backend } = useServices();
+  const [found, setFound] = useState(0);
+
+  // A quiet look at the SSH config: it is only worth a word if it holds servers.
+  useEffect(() => {
+    let live = true;
+    backend.discoverSshHosts().then(
+      (hosts) => {
+        if (live) setFound(hosts.length);
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [backend]);
+
   return (
     <motion.div
       className="empty"
@@ -43,6 +62,20 @@ export function EmptyState({ onAdd }: { onAdd: () => void }) {
       <Button variant="primary" icon={<Plus size={16} />} onClick={onAdd}>
         {t("empty.cta")}
       </Button>
+      {found > 0 && (
+        <motion.div
+          className="empty__found"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={gentle}
+        >
+          <FileTerminal size={18} aria-hidden="true" />
+          <span>{i18n.plural("empty.found", found)}</span>
+          <Button size="sm" onClick={onImport}>
+            {t("empty.import")}
+          </Button>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

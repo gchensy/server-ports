@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Plus, Settings } from "lucide-react";
+import { Import, Plus, Settings } from "lucide-react";
 import type { Profile } from "../api/types";
 import { isActive } from "../state/AppStore";
 import { useAppState, useI18n, useStore } from "../state/services";
@@ -9,7 +9,15 @@ import { spring } from "./motion";
 import { StatusDot } from "./StatusDot";
 import { Button, Switch } from "./ui";
 
-export function Sidebar({ onNew, onSettings }: { onNew: () => void; onSettings: () => void }) {
+export function Sidebar({
+  onNew,
+  onImport,
+  onSettings,
+}: {
+  onNew: () => void;
+  onImport: () => void;
+  onSettings: () => void;
+}) {
   const { t } = useI18n();
   const profiles = useAppState((state) => state.profiles);
   return (
@@ -30,7 +38,11 @@ export function Sidebar({ onNew, onSettings }: { onNew: () => void; onSettings: 
         </AnimatePresence>
       </nav>
       <footer className="sidebar__footer">
-        <button type="button" className="sidebar__settings" onClick={onSettings}>
+        <button type="button" className="sidebar__action" onClick={onImport}>
+          <Import size={16} />
+          {t("sidebar.import")}
+        </button>
+        <button type="button" className="sidebar__action" onClick={onSettings}>
           <Settings size={16} />
           {t("sidebar.settings")}
         </button>

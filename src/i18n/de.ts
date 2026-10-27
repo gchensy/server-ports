@@ -10,6 +10,7 @@ export const de: Catalog = {
 
   "sidebar.new": "Neuer Server",
   "sidebar.settings": "Einstellungen",
+  "sidebar.import": "SSH-Config importieren",
   "sidebar.servers": "Server",
   "sidebar.connect": "{name} verbinden",
   "sidebar.disconnect": "{name} trennen",
@@ -55,6 +56,9 @@ export const de: Catalog = {
   "empty.body":
     "Fügen Sie einen Server hinzu und wählen Sie die benötigten Ports. Sie erscheinen auf diesem Computer, bleiben im Hintergrund offen und verbinden sich selbstständig neu.",
   "empty.cta": "Ersten Server hinzufügen",
+  "empty.found.one": "{n} Server in Ihrer SSH-Konfiguration gefunden",
+  "empty.found.other": "{n} Server in Ihrer SSH-Konfiguration gefunden",
+  "empty.import": "Importieren…",
 
   "profile.new.title": "Neuer Server",
   "profile.edit.title": "Server bearbeiten",
@@ -85,6 +89,7 @@ export const de: Catalog = {
   "profile.connectOnLaunch": "Beim Start der App verbinden",
   "profile.restartNote": "Beim Speichern geänderter Verbindungseinstellungen wird dieser Server neu verbunden.",
   "profile.saveAndConnect": "Speichern und verbinden",
+  "profile.imported": "Aus Ihrer SSH-Konfiguration. Fügen Sie die weiterzuleitenden Ports hinzu und speichern Sie.",
 
   "form.listenOn": "Lauschen auf",
   "form.forwardTo": "Weiterleiten an",
@@ -111,6 +116,16 @@ export const de: Catalog = {
   "invalid.bindHost": "Die lokale Adresse muss eine IP-Adresse sein.",
   "invalid.remoteHost": "Der Remote-Host darf keine Leerzeichen enthalten.",
   "invalid.duplicatePort": "Dieser lokale Port wird bereits von einer anderen Weiterleitung verwendet.",
+
+  "import.title": "Aus SSH-Konfiguration importieren",
+  "import.intro":
+    "Wählen Sie die Server aus, die in Server Ports übernommen werden sollen. Ihre SSH-Konfigurationsdatei wird nur gelesen, nie verändert.",
+  "import.empty": "In Ihrer SSH-Konfiguration wurden keine Server gefunden.",
+  "import.added": "Bereits hinzugefügt",
+  "import.unsupported": "Noch nicht unterstützt: {kind}",
+  "import.noPorts": "Ports noch zu wählen",
+  "import.selected": "Ausgewählt: {n}",
+  "import.confirm": "Importieren",
 
   "hostKey.title": "Diesem Server vertrauen?",
   "hostKey.body":
@@ -189,6 +204,7 @@ export const de: Catalog = {
   "error.bind.title": "Der Port konnte nicht geöffnet werden",
   "error.storage.title": "Speichern nicht möglich",
   "error.keychain.title": "Der Schlüsselbund des Systems ist nicht verfügbar",
+  "error.sshConfig.title": "Die SSH-Konfiguration kann nicht gelesen werden",
   "error.notFound.title": "Diesen Server gibt es nicht mehr",
   "error.other.title": "Etwas ist schiefgelaufen",
   "error.unknown.title": "Etwas ist schiefgelaufen",

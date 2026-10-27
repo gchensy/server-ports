@@ -15,6 +15,7 @@ Server Ports 是一款小巧的跨平台桌面应用（Windows、macOS、Linux�
 ## 功能
 
 - **服务器配置**：每台 SSH 服务器一份配置，可以添加任意多条端口映射。
+- **从 SSH 配置导入**：在侧边栏或起始页中，从 `~/.ssh/config` 里挑选服务器，一次性复制到 Server Ports。主机名、用户、端口、密钥文件（`IdentityFile`）和端口转发（`LocalForward`）都会一并带入，包括从 `Host *` 块和 `Include` 文件继承来的设置。这只是一次性的复制：SSH 配置文件只会被读取，不会被修改。
 - **三种登录方式**：密码、私钥文件（可带口令），或 ssh-agent（OpenSSH agent 或 Pageant）。
 - **敏感信息不写进配置文件**：只有在你选择“记住”时，密码和私钥口令才会保存到 macOS 钥匙串、Windows 凭据管理器或 Linux Secret Service；否则它们只在服务器连接期间保存在内存中。
 - **主机密钥校验**：第一次见到的服务器密钥会连同指纹一起显示，只有你确认后才会信任；密钥发生变化时会被标记出来。
@@ -39,7 +40,7 @@ Server Ports 是一款小巧的跨平台桌面应用（Windows、macOS、Linux�
 
 - 暂不支持键盘交互式（双因素）登录、跳板机（`ProxyJump`）和主机证书。
 - 只支持本地转发（`ssh -L`），不支持远程转发（`-R`）和 SOCKS 代理（`-D`）。
-- 服务器需要手动添加，不会读取 `~/.ssh/config`。
+- 从 `~/.ssh/config` 导入只是一次性复制，之后对该文件的修改不会同步。需要 `ProxyJump` 或 `ProxyCommand` 的主机会列出，但暂时无法导入；`Match` 块会被跳过，`RemoteForward` 和 `DynamicForward` 会被忽略。没有 `LocalForward` 的主机会打开表单，让你自己选择端口。
 - 在 GNOME 上，托盘图标需要 AppIndicator 扩展。没有它的话，请在设置里关闭“关闭窗口后继续在托盘中运行”，或者再次启动应用把窗口找回来。
 
 ## 开发

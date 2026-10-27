@@ -15,6 +15,7 @@ Server Ports est une petite application de bureau multiplateforme (Windows, macO
 ## Fonctionnalités
 
 - **Profils de serveur** : un profil par serveur SSH, avec autant de redirections de ports que nécessaire.
+- **Import depuis votre configuration SSH** : choisissez des serveurs dans `~/.ssh/config` et copiez-les d'un coup dans Server Ports, depuis la barre latérale ou l'écran d'accueil. Le nom d'hôte, l'utilisateur, le port, le fichier de clé (`IdentityFile`) et les redirections (`LocalForward`) sont repris, y compris les réglages hérités des blocs `Host *` et des fichiers `Include`. C'est une copie unique : votre configuration SSH est seulement lue, jamais modifiée.
 - **Trois modes d'authentification** : mot de passe, fichier de clé privée (avec phrase secrète facultative) ou ssh-agent (agent OpenSSH ou Pageant).
 - **Les secrets restent hors du fichier de configuration** : si vous le demandez, les mots de passe et les phrases secrètes des clés sont conservés dans le Trousseau d'accès de macOS, le Gestionnaire d'informations d'identification de Windows ou le Secret Service de Linux ; sinon, ils ne sont gardés en mémoire que le temps de la connexion au serveur.
 - **Vérification de la clé d'hôte** : la clé d'un serveur jamais vu auparavant s'affiche avec son empreinte et n'est approuvée que si vous le confirmez ; une clé qui a changé est signalée.
@@ -39,7 +40,7 @@ C'est l'équivalent de `ssh -L 127.0.0.1:8080:127.0.0.1:80 user@server`. La cibl
 
 - Pas encore d'authentification interactive au clavier (double facteur), de rebond par un autre serveur (`ProxyJump`) ni de certificats d'hôte.
 - Seulement les redirections locales (`ssh -L`) ; les redirections distantes (`-R`) et SOCKS (`-D`) ne sont pas prises en charge.
-- Les serveurs s'ajoutent à la main ; `~/.ssh/config` n'est pas lu.
+- L'import depuis `~/.ssh/config` est une copie unique ; les modifications ultérieures du fichier ne sont pas reprises. Les hôtes qui exigent `ProxyJump` ou `ProxyCommand` sont listés mais ne peuvent pas encore être importés, les blocs `Match` sont ignorés, tout comme les lignes `RemoteForward` et `DynamicForward`. Un hôte sans `LocalForward` ouvre le formulaire pour que vous choisissiez ses ports.
 - Sous GNOME, l'icône de la zone de notification nécessite l'extension AppIndicator. Sans elle, désactivez l'option de la zone de notification dans les réglages, ou relancez l'application pour faire revenir sa fenêtre.
 
 ## Développement
