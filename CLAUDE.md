@@ -35,7 +35,7 @@ Run from the repo root.
 - `src/`: React UI. TypeScript is strict, and `noUnusedLocals` / `noUnusedParameters` are on. Services are classes (object-oriented on purpose), read from components through hooks.
   - `api/`: the `Backend` interface, `TauriBackend` (IPC), `MockBackend` (browser development only, tree-shaken from production), the wire types in `types.ts` (keep them in step with `model.rs` and `backend.rs`) and `errors.ts`.
   - `state/`: `AppStore` (all UI state, read through `useSyncExternalStore`; merges the startup snapshot and the event stream by `rev` and `seq`), `ThroughputTracker`, `Appearance` (light, dark, system), `prefs.ts` (localStorage), `services.tsx` (context and hooks).
-  - `i18n/`: the `I18n` class and one typed catalogue per language (`en`, `zh-CN`, `zh-TW`, `ja`, `ko`, `es`, `fr`, `de`, `ru`). `en.ts` is the source; the others are typed `Catalog` and have to define the same keys (the compiler checks). To add a language: a catalogue file, then `LANGUAGE_NAMES` and `catalogs` in `index.ts`, a font line in `tokens.css` if it is a CJK language, and the READMEs.
+  - `i18n/`: the `I18n` class and one typed catalogue per language (`en`, `zh-CN`, `zh-TW`, `ja`, `ko`, `es`, `fr`, `de`, `ru`). `en.ts` is the source; the others are typed `Catalog` and have to define the same keys (the compiler checks). To add a language: a catalogue file, then `LANGUAGE_NAMES` and `catalogs` in `index.ts`, a font line in `tokens.css` if it is a CJK language, and the READMEs (`docs/README.<lang>.md`, plus the switcher line in every README).
   - `components/`, `styles/` (plain CSS on the variables in `tokens.css`, no CSS framework). `ProfileDialog` is the one place servers are added: a new one is typed into its form or, with the switch in its header (offered once `useSshHosts` finds servers in the SSH config), picked on the `ImportList`; the ones that list cannot save as they are come back to `ProfileDialog` as `imported` drafts, queued by `App.tsx`.
 - `src-tauri/`: Rust crate and Tauri config. `tauri.conf.json` holds the window, CSP and bundle settings. `capabilities/default.json` lists what the webview may call, so add the permission there when you add a plugin that needs one (the app's own commands are allowed by default). The opener plugin is scoped to loopback `http` URLs, which is all the open button of a port mapping needs; keep it that narrow. `icons/icon.svg` is the source of the icon set.
 - `src-tauri/src/`: the core knows nothing about Tauri or the UI; it reports through an event sink.
@@ -51,6 +51,7 @@ Run from the repo root.
   - `app.rs` (plugins, setup, the life of the main window in `MainWindow`, exit events, the sink that forwards events to the webview), `commands.rs` (thin Tauri commands) and `tray.rs` (tray icon and menu) are the only files that know Tauri.
   - `testing.rs` (tests only): an in-process russh server, an echo target and helpers shared by the tests.
   - `util.rs`: `now_ms`, `new_id`, `expand_tilde`, `write_atomic`.
+- `docs/`: the translations of the README, one `README.<lang>.md` each. The English `README.md` stays in the repo root.
 - `.github/workflows/`: `ci.yml` and `release.yml`, see "CI and releases".
 
 Keep this list in sync when you add or move modules.
@@ -84,7 +85,7 @@ Keep this list in sync when you add or move modules.
 
 ## Documentation
 
-`README.md` is the English source of truth. The translations are `README.<lang>.md` in the repo root (zh-CN, zh-TW, ja, ko, es, fr, de, ru). They share the same structure, and each starts with the same language switcher line. When you change `README.md`, update every translation in the same commit. Commands, code blocks and file names stay untranslated.
+`README.md` is the English source of truth and stays in the repo root. The translations are `docs/README.<lang>.md` (zh-CN, zh-TW, ja, ko, es, fr, de, ru). They share the same structure, and each starts with the same language switcher line: in `README.md` its links point into `docs/`, and in a translation `English` points to `../README.md`. When you change `README.md`, update every translation in the same commit. Commands, code blocks and file names stay untranslated.
 
 ## Git and GitHub
 
