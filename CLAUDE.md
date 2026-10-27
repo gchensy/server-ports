@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Identifiers: npm package and crate `server-ports` (lib `server_ports_lib`), bundle id `com.chensy.server-ports`.
 
-Status (2026-10-26): early development. The Rust core (model, stores, secrets, prompts, the `ssh/` engine and the `Backend` facade), the Tauri layer (commands, tray, close-to-tray, autostart, single instance) and the React UI (nine languages, light and dark) all exist and run on Linux. `cargo test` passes against an in-process SSH server, the UI was checked in a browser against the mock backend, and the real app starts, shows its tray icon and loads the UI. CI (`ci.yml`) lints and tests the core on Linux, macOS and Windows, and a manual run of `release.yml` on `main` built every installer; both were green. The `.deb` from that run has been installed and started on Ubuntu 26.04 (GNOME, Wayland). The app itself has never been run on macOS or Windows, their installers have never been installed, and nothing is released. Known gaps: no keyboard-interactive (2FA) login, ProxyJump, host certificates or `-R` / `-D` forwards; the `~/.ssh/config` import skips ProxyJump / ProxyCommand hosts and `Match` blocks. Update this line as that changes.
+Status (2026-10-26): early development. The Rust core (model, stores, secrets, prompts, the `ssh/` engine and the `Backend` facade), the Tauri layer (commands, tray, close-to-tray, autostart, single instance) and the React UI (nine languages, light and dark) all exist and run on Linux. `cargo test` passes against an in-process SSH server, the UI was checked in a browser against the mock backend, and the real app starts, shows its tray icon and loads the UI. CI (`ci.yml`) lints and tests the core on Linux, macOS and Windows, and a manual run of `release.yml` on `main` built every installer; both were green. The `.deb` from that run has been installed and started on Ubuntu 26.04 (GNOME, Wayland). The app itself has never been run on macOS or Windows, and their installers, like the Linux `.rpm` and `.AppImage`, have never been installed. v0.1.0, the first release, was published on 2026-10-26 with these unsigned installers. Known gaps: no keyboard-interactive (2FA) login, ProxyJump, host certificates or `-R` / `-D` forwards; the `~/.ssh/config` import skips ProxyJump / ProxyCommand hosts and `Match` blocks. Update this line as that changes.
 
 ## Commands
 
@@ -51,7 +51,7 @@ Run from the repo root.
   - `app.rs` (plugins, setup, the life of the main window in `MainWindow`, exit events, the sink that forwards events to the webview), `commands.rs` (thin Tauri commands) and `tray.rs` (tray icon and menu) are the only files that know Tauri.
   - `testing.rs` (tests only): an in-process russh server, an echo target and helpers shared by the tests.
   - `util.rs`: `now_ms`, `new_id`, `expand_tilde`, `write_atomic`.
-- `docs/`: the translations of the README, one `README.<lang>.md` each. The English `README.md` stays in the repo root.
+- `docs/`: the translations of the README, one `README.<lang>.md` each, and `images/` with the screenshots every README shows. The English `README.md` stays in the repo root.
 - `.github/workflows/`: `ci.yml` and `release.yml`, see "CI and releases".
 
 Keep this list in sync when you add or move modules.
@@ -86,6 +86,8 @@ Keep this list in sync when you add or move modules.
 ## Documentation
 
 `README.md` is the English source of truth and stays in the repo root. The translations are `docs/README.<lang>.md` (zh-CN, zh-TW, ja, ko, es, fr, de, ru). They share the same structure, and each starts with the same language switcher line: in `README.md` its links point into `docs/`, and in a translation `English` points to `../README.md`. When you change `README.md`, update every translation in the same commit. Commands, code blocks and file names stay untranslated.
+
+The pictures in `docs/images/` (`overview` and `overview-dark` for the window, which `<picture>` swaps by colour scheme; `new-server`, `import-ssh-config`, `trust-server` and `settings` for the dialogs) were taken from the browser mock (`npm run dev`) with headless Chrome at 1040 px wide and a pixel ratio of 2: the dialogs cropped to their own box, then rounded corners and a soft shadow added and the PNG optimised. They show the English interface and the mock's sample servers (the fingerprint in `trust-server.png` is made up), in every language's README. Retake them when the interface changes visibly, and keep the `width` of each `<img>` at about half its pixel size.
 
 ## Git and GitHub
 
