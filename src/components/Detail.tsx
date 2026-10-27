@@ -1,14 +1,15 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Laptop, Pencil, Power, PowerOff, Server, Trash, TriangleAlert } from "lucide-react";
+import { useState } from "react";
 import type { ConnState, Profile, ProfileRuntime } from "../api/types";
 import { isActive } from "../state/AppStore";
 import { useAppState, useI18n, useProfile, useStore } from "../state/services";
 import { useNow } from "../state/useNow";
 import { cx } from "../util/cx";
-import { LogPanel } from "./LogPanel";
+import { CopyLogButton, LogPanel } from "./LogPanel";
 import { ForwardRow } from "./ForwardRow";
 import { StatusDot } from "./StatusDot";
-import { Button, IconButton } from "./ui";
+import { Button, IconButton, Tabs } from "./ui";
 
 /** Errors that the user fixes by changing the server's settings. */
 const FIXED_BY_EDITING = ["keyFile", "noListeners", "auth", "agent", "negotiation"];
@@ -41,6 +42,7 @@ function ServerView({ profile, onEdit, onDelete }: { profile: Profile; onEdit: (
   const runtime = useAppState((state) => state.runtimes[profile.id]);
   const active = isActive(runtime);
   const connected = runtime?.conn.state === "connected";
+  const [tab, setTab] = useState<"ports" | "activity">("ports");
 
   return (
     <>
@@ -52,9 +54,6 @@ function ServerView({ profile, onEdit, onDelete }: { profile: Profile; onEdit: (
               {profile.username}@{profile.host}
               {profile.port !== 22 && `:${profile.port}`}
             </code>
-            <span>{i18n.plural("ports", profile.forwards.length)}</span>
-            <span>{authSummary(profile, t)}</span>
-            {profile.autoReconnect && <span>{t("detail.autoReconnect")}</span>}
           </p>
         </div>
         <div className="detail__actions">
@@ -79,23 +78,31 @@ function ServerView({ profile, onEdit, onDelete }: { profile: Profile; onEdit: (
         <Problem key={`${profile.id}-${runtime?.conn.state}`} profile={profile} runtime={runtime} onEdit={onEdit} />
       </AnimatePresence>
 
-      <section className="mappings" aria-label={t("detail.mappings")}>
-        <header className="section-head">
-          <h2>{t("detail.mappings")}</h2>
-        </header>
-        <ul className="mappings__list">
-          {profile.forwards.map((forward) => (
-            <ForwardRow
-              key={forward.id}
-              forward={forward}
-              runtime={runtime?.forwards.find((f) => f.id === forward.id)}
-              connected={connected}
-            />
-          ))}
-        </ul>
-      </section>
-
-      <LogPanel profileId={profile.id} />
+      <Tabs
+        value={tab}
+        onChange={setTab}
+        label={profile.name}
+        options={[
+          { value: "ports", label: t("detail.mappings") },
+          { value: "activity", label: t("detail.log") },
+        ]}
+        actions={tab === "activity" ? <CopyLogButton profileId={profile.id} /> : undefined}
+      >
+        {tab === "ports" ? (
+          <ul className="mappings__list">
+            {profile.forwards.map((forward) => (
+              <ForwardRow
+                key={forward.id}
+                forward={forward}
+                runtime={runtime?.forwards.find((f) => f.id === forward.id)}
+                connected={connected}
+              />
+            ))}
+          </ul>
+        ) : (
+          <LogPanel profileId={profile.id} />
+        )}
+      </Tabs>
     </>
   );
 }

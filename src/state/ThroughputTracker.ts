@@ -10,6 +10,8 @@ const WINDOW = 60;
 const TICK_MS = 1000;
 export const NO_SAMPLES: readonly Sample[] = [];
 
+const isQuiet = (sample: Sample): boolean => sample.up === 0 && sample.down === 0;
+
 /** Turns the byte counters of the mappings into the last minute of throughput. */
 export class ThroughputTracker {
   private readonly rings = new Map<string, Sample[]>();
@@ -42,6 +44,7 @@ export class ThroughputTracker {
   private tick(): void {
     const now = performance.now();
     const alive = new Set<string>();
+    let changed = false;
     for (const runtime of Object.values(this.store.getState().runtimes)) {
       for (const forward of runtime.forwards) {
         alive.add(forward.id);
@@ -55,17 +58,24 @@ export class ThroughputTracker {
               down: (forward.bytesDown - before.down) / seconds,
             }
           : { up: 0, down: 0 };
-        const ring = [...(this.rings.get(forward.id) ?? []), sample].slice(-WINDOW);
-        this.rings.set(forward.id, ring);
         this.previous.set(forward.id, { up: forward.bytesUp, down: forward.bytesDown, at: now });
+
+        const ring = this.rings.get(forward.id) ?? NO_SAMPLES;
+        // A whole minute of nothing, and nothing again: the picture would stay the same.
+        if (ring.length === WINDOW && isQuiet(sample) && ring.every(isQuiet)) continue;
+        this.rings.set(forward.id, [...ring, sample].slice(-WINDOW));
+        changed = true;
       }
     }
     for (const id of [...this.rings.keys()]) {
       if (!alive.has(id)) {
         this.rings.delete(id);
         this.previous.delete(id);
+        changed = true;
       }
     }
+    // An idle window is not redrawn at all.
+    if (!changed) return;
     this.version++;
     this.listeners.forEach((listener) => listener());
   }

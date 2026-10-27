@@ -1,10 +1,9 @@
-import { ArrowDown, ArrowRight, ArrowUp, Check, Copy } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, Check, Copy, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import type { Forward, ForwardRuntime } from "../api/types";
 import { useI18n, useSamples, useStore } from "../state/services";
 import { cx } from "../util/cx";
-import { copyText, formatBytes, formatRate, localAddress, remoteAddress } from "../util/format";
-import { Counter } from "./Counter";
+import { copyText, formatBytes, formatRate, localAddress, localUrl, remoteAddress } from "../util/format";
 import { Sparkline } from "./Sparkline";
 import { IconButton } from "./ui";
 
@@ -44,9 +43,18 @@ export function ForwardRow({
         <code className="mapping__remote">{remoteAddress(forward)}</code>
         {forward.label && <span className="chip">{forward.label}</span>}
         <span className="mapping__spacer" />
-        <IconButton label={t("forward.copy")} onClick={() => void copy()}>
-          {copied ? <Check size={15} /> : <Copy size={15} />}
-        </IconButton>
+        <span className="mapping__tools">
+          <IconButton
+            label={t("forward.openLink")}
+            onClick={() => void store.openLink(localUrl(forward))}
+            disabled={!listening}
+          >
+            <ExternalLink size={15} />
+          </IconButton>
+          <IconButton label={t("forward.copy")} onClick={() => void copy()}>
+            {copied ? <Check size={15} /> : <Copy size={15} />}
+          </IconButton>
+        </span>
       </div>
 
       {runtime?.state.state === "failed" && (
@@ -65,7 +73,7 @@ export function ForwardRow({
                 <ArrowUp size={12} />
               </dt>
               <dd>
-                <Counter value={runtime.bytesUp} format={formatBytes} />
+                <span>{formatBytes(runtime.bytesUp)}</span>
                 <small>{formatRate(last?.up ?? 0)}</small>
               </dd>
             </div>
@@ -74,7 +82,7 @@ export function ForwardRow({
                 <ArrowDown size={12} />
               </dt>
               <dd>
-                <Counter value={runtime.bytesDown} format={formatBytes} />
+                <span>{formatBytes(runtime.bytesDown)}</span>
                 <small>{formatRate(last?.down ?? 0)}</small>
               </dd>
             </div>

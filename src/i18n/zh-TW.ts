@@ -10,7 +10,6 @@ export const zhTW: Catalog = {
 
   "sidebar.new": "新增伺服器",
   "sidebar.settings": "設定",
-  "sidebar.import": "從 SSH 設定匯入",
   "sidebar.servers": "伺服器",
   "sidebar.connect": "連線到 {name}",
   "sidebar.disconnect": "中斷與 {name} 的連線",
@@ -39,9 +38,9 @@ export const zhTW: Catalog = {
   "detail.auth.password": "密碼",
   "detail.auth.key": "金鑰 {path}",
   "detail.auth.agent": "SSH 代理程式",
-  "detail.autoReconnect": "自動重新連線",
 
   "forward.copy": "複製位址",
+  "forward.openLink": "在瀏覽器中開啟",
   "forward.pending": "等待中",
   "forward.listening": "監聽中",
   "forward.failed": "無法使用",
@@ -60,6 +59,8 @@ export const zhTW: Catalog = {
   "empty.import": "匯入…",
 
   "profile.new.title": "新增伺服器",
+  "profile.source.manual": "手動填寫",
+  "profile.source.ssh": "從 SSH 設定",
   "profile.edit.title": "編輯伺服器",
   "profile.section.server": "伺服器",
   "profile.section.auth": "登入方式",

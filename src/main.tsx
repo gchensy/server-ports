@@ -18,8 +18,10 @@ async function main() {
       </ServicesProvider>
     </StrictMode>,
   );
-  await services.store.start();
+  // The tray has its words before the window may go (a start in the tray closes it again once it
+  // is ready), and the window is ready once the store has started.
   await services.store.sendTrayLabels();
+  await services.store.start();
 }
 
 void main();

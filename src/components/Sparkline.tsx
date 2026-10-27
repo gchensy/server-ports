@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import type { Sample } from "../state/ThroughputTracker";
 
 const WIDTH = 120;
@@ -20,12 +19,9 @@ function curve(points: [number, number][]): string {
   return path;
 }
 
-/** The last minute of traffic. It scrolls one slot to the left every second. */
+/** The last minute of traffic, one point a second. It is drawn again when a sample arrives and never
+ * animated: an animation that does not end keeps the whole window repainting. */
 export function Sparkline({ samples, live }: { samples: readonly Sample[]; live: boolean }) {
-  // A new key restarts the slide animation each time a sample arrives.
-  const ticks = useRef({ samples, count: 0 });
-  if (ticks.current.samples !== samples) ticks.current = { samples, count: ticks.current.count + 1 };
-
   const step = WIDTH / (SLOTS - 1);
   const totals = samples.map((s) => s.up + s.down);
   const peak = Math.max(FLOOR, ...totals);
@@ -39,10 +35,8 @@ export function Sparkline({ samples, live }: { samples: readonly Sample[]; live:
 
   return (
     <svg className={live ? "spark is-live" : "spark"} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
-      <g key={ticks.current.count} className="spark__slide" style={{ ["--step" as string]: `${step}px` }}>
-        <path className="spark__area" d={area} />
-        <path className="spark__line" d={line} vectorEffect="non-scaling-stroke" />
-      </g>
+      <path className="spark__area" d={area} />
+      <path className="spark__line" d={line} vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }

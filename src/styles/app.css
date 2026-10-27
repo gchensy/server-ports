@@ -217,20 +217,48 @@
   margin-right: 6px;
 }
 
-.section-head {
+/* Port mappings and Activity, one at a time. */
+
+.tabs__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 34px;
+  gap: 16px;
+  /* As tall as the copy button, so the row does not jump when the button comes and goes. */
+  min-height: 40px;
+  border-bottom: 1px solid var(--border);
 }
 
-.section-head h2 {
-  margin: 0;
+.tabs__list {
+  display: flex;
+  gap: 24px;
+}
+
+.tabs__tab {
+  margin-bottom: -1px;
+  padding: 11px 0 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
   color: var(--muted);
   font-size: 12px;
   font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tabs__tab:hover {
+  color: var(--text-2);
+}
+
+.tabs__tab.is-on {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}
+
+.tabs__panel {
+  padding-top: 14px;
 }
 
 /* The tunnel: this computer, a line that shows what the connection is doing, the server. */
@@ -310,23 +338,24 @@
   transition: opacity 0.4s;
 }
 
+/* Nothing in this window may animate for good. While anything does, the whole window is repainted
+   sixty times a second, and the CPU and GPU pay for that even when nothing on screen changes. Only
+   the wait for an answer blinks, and that ends within seconds. */
 .tunnel--connected .tunnel__pipe {
   background-image: radial-gradient(circle, var(--tone) 0 2.4px, transparent 3px);
   background-size: 16px 4px;
   opacity: 1;
-  animation: flow 0.8s linear infinite;
 }
 
 .tunnel--connecting .tunnel__pipe {
   background-image: repeating-linear-gradient(90deg, var(--tone) 0 6px, transparent 6px 14px);
   background-size: 14px 4px;
   opacity: 0.9;
-  animation: flow-short 0.45s linear infinite;
+  animation: blink 1s ease-in-out infinite;
 }
 
 .tunnel--reconnecting .tunnel__pipe {
   background-image: repeating-linear-gradient(90deg, var(--tone) 0 6px, transparent 6px 14px);
-  animation: blink 1.2s ease-in-out infinite;
 }
 
 .tunnel--failed .tunnel__pipe {
@@ -496,6 +525,12 @@
   flex: 1;
 }
 
+.mapping__tools {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
 .mapping__problem {
   display: grid;
   gap: 2px;
@@ -581,14 +616,10 @@
   fill: var(--accent-soft);
 }
 
-.spark__slide {
-  animation: slide 1s linear;
-}
-
 /* The log. */
 
 .log__body {
-  height: 220px;
+  height: clamp(220px, 42vh, 420px);
   padding: 10px 14px;
   overflow-y: auto;
   border: 1px solid var(--border);
@@ -708,7 +739,6 @@
   stroke-dasharray: 2 7;
   stroke-linecap: round;
   opacity: 0.55;
-  animation: dash 0.9s linear infinite;
 }
 
 .art-packet {
@@ -719,38 +749,6 @@
   fill: var(--ok);
 }
 
-.art-led--1 {
-  animation: blink 1.6s ease-in-out infinite;
-}
-
 .art-led--2 {
   fill: var(--warn);
-  animation: blink 2.3s ease-in-out infinite;
-}
-
-@keyframes flow {
-  to {
-    background-position-x: 16px;
-  }
-}
-
-@keyframes flow-short {
-  to {
-    background-position-x: 14px;
-  }
-}
-
-@keyframes slide {
-  from {
-    transform: translateX(var(--step));
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes dash {
-  to {
-    stroke-dashoffset: -9;
-  }
 }

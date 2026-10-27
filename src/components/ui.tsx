@@ -101,6 +101,68 @@ export function Segmented<T extends string>({
   );
 }
 
+/** Tabs that switch what is shown below them. `actions` sit at the far end of the row of tabs. */
+export function Tabs<T extends string>({
+  value,
+  options,
+  label,
+  onChange,
+  actions,
+  children,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  label: string;
+  onChange: (value: T) => void;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
+  const id = useId();
+  const tabId = (tab: T) => `${id}-${tab}`;
+  const step = (by: number) => {
+    const at = options.findIndex((option) => option.value === value);
+    const next = options[(at + by + options.length) % options.length].value;
+    onChange(next);
+    document.getElementById(tabId(next))?.focus();
+  };
+  return (
+    <div className="tabs">
+      <div className="tabs__bar">
+        <div
+          className="tabs__list"
+          role="tablist"
+          aria-label={label}
+          onKeyDown={(event) => {
+            if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+            event.preventDefault();
+            step(event.key === "ArrowRight" ? 1 : -1);
+          }}
+        >
+          {options.map((option) => (
+            <button
+              key={option.value}
+              id={tabId(option.value)}
+              type="button"
+              role="tab"
+              aria-selected={option.value === value}
+              aria-controls={`${id}-panel`}
+              tabIndex={option.value === value ? 0 : -1}
+              className={cx("tabs__tab", option.value === value && "is-on")}
+              onClick={() => onChange(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        {actions}
+      </div>
+      <div className="tabs__panel" role="tabpanel" id={`${id}-panel`} aria-labelledby={tabId(value)}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function Field({
   label,
   hint,
